@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 const userSchema = new schema(
   {
-    username: {
+    userName: {
       type: String,
       required: true,
       unique: true,
@@ -25,12 +25,34 @@ const userSchema = new schema(
       lowercase: true,
       trim: true,
     },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+      required: true,
+    },
     avatar: {
       type: String, //cloudinary url
     },
     password: {
       type: String,
       required: [true, "Password is required"],
+    },
+    role: {
+      type: String,
+      enum: ["user", "seller", "admin"],
+      default: "user",
+    },
+    phone: {
+      type: String,
+      required: true,
+      unique: true,
+      validate: {
+        validator: function (v) {
+          return /^\+92\d{10}$/.test(v); // Pakistani phone number format validation
+        },
+        message: (props) =>
+          `${props.value} is not a valid Pakistani phone number!`,
+      },
     },
     refreshToken: {
       type: String,
