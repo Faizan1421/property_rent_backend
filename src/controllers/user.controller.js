@@ -18,6 +18,8 @@ const registerUser = asyncHandler((req, res) => {
   //return Response
 
   const { userName, email, fullName, gender, password, phone } = req.body;
+  console.log("Email ", email);
+  res.json("received");
 });
 
 export { registerUser };
