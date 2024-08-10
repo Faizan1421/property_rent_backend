@@ -36,6 +36,24 @@ const registerUser = asyncHandler(async (req, res) => {
   if (existedUser) {
     throw new ApiError(409, "User with Given Email or Username Already Exists");
   }
+
+  //4-Check For Avatar/Image
+
+  console.log(req.file);
+
+  //Imp Notes:
+  /* req.file
+Purpose: Used when uploading a single file.
+Type: An object containing information about the uploaded file.
+Usage: req.file is available when you use upload.single('fieldName'), 
+where 'fieldName' is the name of the input field in your form.*/
+
+  /* req.files
+Purpose: Used when uploading multiple files.
+Type: An array of objects, where each object contains information about an individual uploaded file.
+Usage: req.files is available when you use upload.array('fieldName', maxCount),
+where 'fieldName' is the name of the input field in your form, 
+and maxCount is the maximum number of files you want to allow. */
 });
 
 export { registerUser };
