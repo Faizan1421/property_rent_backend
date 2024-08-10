@@ -6,20 +6,36 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
-const registerUser = asyncHandler((req, res) => {
-  //Get User Details from Frontend
-  //Validation - Not Empty
-  //Check If User Already Exists: userName,email
-  //Check For Avatar/Image
-  //Upload to Cloudinary - Avatar/Image
-  //Create User Object by User Model - Create Entry in DB
-  //Remove Password and Refresh Token from Response
-  //Check for User Creation
-  //return Response
+const registerUser = asyncHandler(async (req, res) => {
+  //1-Get User Details from Frontend
+  //2-Validation - Not Empty
+  //3-Check If User Already Exists: userName,email
+  //4-Check For Avatar/Image
+  //5-Upload to Cloudinary - Avatar/Image
+  //6-Create User Object by User Model - Create Entry in DB
+  //7-Remove Password and Refresh Token from Response
+  //8-Check for User Creation
+  //9-return Response
 
+  //1-Get User Details from Frontend
   const { userName, email, fullName, gender, password, phone } = req.body;
-  console.log("Email ", email);
-  res.json("received");
+
+  //2-Validation - Not Empty
+  if (
+    [userName, email, fullName, gender, password, phone].some(
+      (field) => field?.trim() === ""
+    )
+  ) {
+    throw new ApiError(400, "All Fields are Required");
+  }
+
+  //3-Check If User Already Exists: userName,email
+  const existedUser = await User.findOne({
+    $or: [{ userName }, { email }],
+  });
+  if (existedUser) {
+    throw new ApiError(409, "User with Given Email or Username Already Exists");
+  }
 });
 
 export { registerUser };
