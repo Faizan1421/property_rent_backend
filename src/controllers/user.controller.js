@@ -21,6 +21,10 @@ const registerUser = asyncHandler(async (req, res) => {
   const { userName, email, fullName, gender, password, phone } = req.body;
 
   //2-Validation - Not Empty
+
+  /* This code snippet is performing validation to ensure that all the required fields (userName,
+  email, fullName, gender, password, phone) are not empty.Javascript some method is used to return boolean value.
+  Here's a breakdown of what it does: */
   if (
     [userName, email, fullName, gender, password, phone].some(
       (field) => field?.trim() === ""
@@ -54,6 +58,8 @@ Type: An array of objects, where each object contains information about an indiv
 Usage: req.files is available when you use upload.array('fieldName', maxCount) in middleware,
 where 'fieldName' is the name of the input field in your form, 
 and maxCount is the maximum number of files you want to allow. */
+  const avatarLocalPath = req.file.path;
+  console.log(avatarLocalPath);
 });
 
 export { registerUser };
