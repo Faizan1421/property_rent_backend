@@ -1,7 +1,9 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-
+import dotenv from "dotenv";
+dotenv.config();
 // Configuration
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -22,15 +24,26 @@ const uploadOnCloudinary = async (localFilePath) => {
   try {
     if (!localFilePath) return null;
     //Upload the File on Cloudinary
-    const response = await cloudinary.uploader.upload(localFilePath, {
-      // public_id: "profileImg", // Important!!!  Added this for Optimizing images later
+    const cloudinaryResponse = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
+      transformation: [
+        {
+          fetch_format: "auto",
+          width: 1000,
+          crop: "scale",
+          quality: "auto",
+          fetch_format: "auto",
+        },
+      ],
     });
+
     //File has Uploaded Successfully
-    //console.log("file is uploaded on cloudinary ", response.url)
     fs.unlinkSync(localFilePath);
-    return response;
+    // console.log(cloudinaryResponse);
+    return cloudinaryResponse;
   } catch (error) {
+    console.log("Error While Uploading to Cloudinary", error);
+
     fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the upload operation got failed
     return null;
   }

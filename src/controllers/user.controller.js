@@ -5,35 +5,37 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-
+import fs from "fs";
 const registerUser = asyncHandler(async (req, res) => {
-  //1-Get User Details from Frontend
-  //2-Validation - Not Empty
-  //3-Check If User Already Exists: userName,email
-  //4-Check For Avatar/Image
-  //5-Upload to Cloudinary - Avatar/Image
-  //6-Create User Object by User Model - Create Entry in DB
-  //7-Remove Password and Refresh Token from Response
-  //8-Check for User Creation
-  //9-return Response
+  //TODO:
+  //* 1-Get User Details from Frontend
+  //* 2-Validation - Not Empty
+  //* 3-Check If User Already Exists: userName,email
+  //* 4-Check For Avatar/Image
+  //* 5-Upload to Cloudinary - Avatar/Image
+  //* 6-Create User Object by User Model - Create Entry in DB
+  //* 7-Remove Password and Refresh Token from Response
+  //* 8-Check for User Creation
+  //* 9-return Response
 
-  //1-Get User Details from Frontend
+  // * 1-Get User Details from Frontend
   const { userName, email, fullName, gender, password, phone } = req.body;
 
-  //2-Validation - Not Empty
+  //* 2-Validation - Not Empty
 
   /* This code snippet is performing validation to ensure that all the required fields (userName,
   email, fullName, gender, password, phone) are not empty.Javascript some method is used to return boolean value.
   Here's a breakdown of what it does: */
+
   if (
     [userName, email, fullName, gender, password, phone].some(
-      (field) => field?.trim() === ""
+      (field) => field?.trim() === undefined || ""
     )
   ) {
     throw new ApiError(400, "All Fields are Required");
   }
 
-  //3-Check If User Already Exists: userName,email
+  //* 3-Check If User Already Exists: userName,email
   const existedUser = await User.findOne({
     $or: [{ userName }, { email }],
   });
@@ -41,25 +43,49 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "User with Given Email or Username Already Exists");
   }
 
-  //4-Check For Avatar/Image
+  //* 4-Check For Avatar/Image
+  // console.log(req.file);
+  const avatarLocalPath = req.file?.path;
+  // console.log(avatarLocalPath);
 
-  console.log(req.file);
+  //* 5-Upload to Cloudinary - Avatar/Image
+  const avatar = await uploadOnCloudinary(avatarLocalPath);
 
-  //Imp Notes:
-  /* req.file
-Purpose: Used when uploading a single file.
-Type: An object containing information about the uploaded file.
-Usage: req.file is available when you use upload.single('fieldName') in middleware, 
-where 'fieldName' is the name of the input field in your form.*/
+  //* 6-Create User Object by User Model - Create Entry in DB
+  const user = await User.create({
+    userName: userName.replace(/ /g, ""), // replace method will remove spaces from inside string.
+    email,
+    fullName,
+    gender,
+    password,
+    phone,
+    avatar: avatar?.url || "",
+  });
 
-  /* req.files
-Purpose: Used when uploading multiple files.
-Type: An array of objects, where each object contains information about an individual uploaded file.
-Usage: req.files is available when you use upload.array('fieldName', maxCount) in middleware,
-where 'fieldName' is the name of the input field in your form, 
-and maxCount is the maximum number of files you want to allow. */
-  const avatarLocalPath = req.file.path;
-  console.log(avatarLocalPath);
+  //* 7-Remove Password and Refresh Token from Response
+  const createdUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+
+  //* 8-Check for User Creation
+  if (!createdUser) {
+    throw new ApiError(500, "Something went wrong while creating a User");
+  }
+
+  //* 9-return Response
+  return res
+    .status(200)
+    .json(new ApiResponse(200, createdUser, "User Registered Successfully"));
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+  //TODO:
+  //* 1-req body -> data
+  //* 2-username or email
+  //* 3-find the user
+  //* 4-password check
+  //* 5-access and referesh token
+  //* 6-send cookie
+});
+
+export { registerUser, loginUser };

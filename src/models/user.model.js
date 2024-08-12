@@ -22,11 +22,12 @@ const userSchema = new Schema(
     fullName: {
       type: String,
       required: true,
-      lowercase: true,
       trim: true,
+      lowercase: true,
     },
     gender: {
       type: String,
+      lowercase: true,
       enum: ["male", "female", "other"],
       required: true,
     },
@@ -41,6 +42,10 @@ const userSchema = new Schema(
       type: String,
       enum: ["user", "seller", "admin"],
       default: "user",
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
     phone: {
       type: String,
