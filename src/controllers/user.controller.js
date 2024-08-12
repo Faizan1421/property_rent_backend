@@ -10,7 +10,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //TODO:
   //* 1-Get User Details from Frontend
   //* 2-Validation - Not Empty
-  //* 3-Check If User Already Exists: userName,email
+  //* 3-Check If User Already Exists: username,email
   //* 4-Check For Avatar/Image
   //* 5-Upload to Cloudinary - Avatar/Image
   //* 6-Create User Object by User Model - Create Entry in DB
@@ -19,25 +19,25 @@ const registerUser = asyncHandler(async (req, res) => {
   //* 9-return Response
 
   // * 1-Get User Details from Frontend
-  const { userName, email, fullName, gender, password, phone } = req.body;
+  const { username, email, fullName, gender, password, phone } = req.body;
 
   //* 2-Validation - Not Empty
 
-  /* This code snippet is performing validation to ensure that all the required fields (userName,
+  /* This code snippet is performing validation to ensure that all the required fields (username,
   email, fullName, gender, password, phone) are not empty.Javascript some method is used to return boolean value.
   Here's a breakdown of what it does: */
 
   if (
-    [userName, email, fullName, gender, password, phone].some(
+    [username, email, fullName, gender, password, phone].some(
       (field) => field?.trim() === undefined || ""
     )
   ) {
     throw new ApiError(400, "All Fields are Required");
   }
 
-  //* 3-Check If User Already Exists: userName,email
+  //* 3-Check If User Already Exists: username,email
   const existedUser = await User.findOne({
-    $or: [{ userName }, { email }],
+    $or: [{ username }, { email }],
   });
   if (existedUser) {
     throw new ApiError(409, "User with Given Email or Username Already Exists");
@@ -53,7 +53,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   //* 6-Create User Object by User Model - Create Entry in DB
   const user = await User.create({
-    userName: userName.replace(/ /g, ""), // replace method will remove spaces from inside string.
+    username: username.replace(/ /g, ""), // replace method will remove spaces from inside string.
     email,
     fullName,
     gender,
@@ -86,6 +86,31 @@ const loginUser = asyncHandler(async (req, res) => {
   //* 4-password check
   //* 5-access and referesh token
   //* 6-send cookie
+
+  //* 1-req body -> data
+  const { username, email, password } = req.body;
+
+  //* 2-username or email
+  if (!(username || email)) {
+    throw new ApiError(400, "Username or email is Required");
+  }
+
+  //* 3-find the user
+  const user = await User.findOne({
+    $or: [{ username }, { email }],
+  });
+  if (!user) {
+    throw new ApiError(404, "User doesnot Exist");
+  }
+
+  //* 4-password check
+  const isPasswordValid = await user.isPasswordCorrect(password);
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid User Credentials");
+  }
 });
+
+//* 5-access and referesh token
 
 export { registerUser, loginUser };

@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 const userSchema = new Schema(
   {
-    userName: {
+    username: {
       type: String,
       required: true,
       unique: true,
@@ -66,7 +66,7 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-//Used Function named method because this keyword is not accessible from fat arrow function
+//* Used Function named method because this keyword is not accessible from fat arrow function
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
@@ -79,9 +79,9 @@ userSchema.pre("save", async function (next) {
 Mongoose. This method is used to compare a given password with the hashed password stored in the
 database for a user. */
 
-//Note Use Function Method instead of fat Arrow method to use this keyword.
+//* Note: Use Function Method instead of fat Arrow method to use this keyword.
 
-userSchema.methods.isPasswordCorrect = async (password) => {
+userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
@@ -94,7 +94,7 @@ userSchema.methods.generateAccessToken = function () {
     jwt.sign({
       _id: this._id,
       email: this.email,
-      userName: this.userName,
+      username: this.username,
       fullName: this.fullName,
     }),
     process.env.ACCESS_TOKEN_SECRET,
