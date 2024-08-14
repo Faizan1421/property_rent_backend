@@ -90,13 +90,13 @@ Mongoose, used to generate a JSON Web Token (JWT)
 access token for a user. */
 
 userSchema.methods.generateAccessToken = function () {
-  return (
-    jwt.sign({
+  return jwt.sign(
+    {
       _id: this._id,
       email: this.email,
       username: this.username,
       fullName: this.fullName,
-    }),
+    },
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
