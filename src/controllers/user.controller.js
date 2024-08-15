@@ -341,10 +341,18 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 //TODO: Update Account Details
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { ...rest } = req.body;
-  console.log(rest);
-  //FIXME: password and refresh token should not be updated in this route
+  //TODO::
+  //* 1- Get Data from req.body
+  //* 2- check if req.body has keys to update secure data like password, refreshtoken,role etc than throw Error.
+  //* 3- Updating user data in DB
+  //* 4- send Response
 
+  //* 1- Get Data from req.body
+  // ...rest will give us an object containing all/any keys in req.body
+  const { ...rest } = req.body;
+  // console.log(rest);
+  //! Important:
+  //* 2- check if req has keys to update secure data like password, refreshtoken,role etc than throw Error.
   const restrictedKeys = [
     "_id",
     "role",
@@ -355,14 +363,21 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     "createdAt",
     "updatedAt",
   ];
-  const checkRestrictedKeys = restrictedKeys.find((value) => {
-    return value in rest;
+  // this find method will return first key found from an restrictedkeys Array
+  //if no restricted key found than it will return undefined value.
+
+  const checkRestrictedKeys = restrictedKeys.find((key) => {
+    return key in rest;
   });
-  console.log(checkRestrictedKeys);
+
+  // if any restricted key is found from find method we will throw an error.
 
   if (checkRestrictedKeys) {
     throw new ApiError(400, "You are Not Authorized to change secure data");
   }
+
+  //* 3- Updating user data in DB
+
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -370,10 +385,10 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         ...rest,
       },
     },
-    { runValidators: true },
-    { new: true }
-  ).select("-password");
+    { new: true, runValidators: true } //new:true will send updated state od doc, runvalidators:true will triger vilidator set on models before updating.
+  ).select("-password -refreshToken");
 
+  //* 4- send Response
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Account details updated successfully"));
