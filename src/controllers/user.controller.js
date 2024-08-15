@@ -286,8 +286,63 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    throw new ApiError(401, error?.message || "Invalid refresh token");
+    throw new ApiError(401, "Invalid refresh token");
   }
 });
 
-export { registerUser, loginUser, LogoutUser, refreshAccessToken };
+// TODO: Change Current Password
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  //TODO:
+  //* 1- Get Old and New Password from req.body
+  //* 2- get user details from database by user _id comming from verifyJWT middleware
+  //* 3- Match Old password provided by user to password saved in database of that user
+  //* 4- set New User password and save doc in DB
+  //* 5- Send Response
+
+  //* 1- Get Old and New Password from req.body
+
+  const { oldPassword, newPassword } = req.body;
+
+  //* 2- get user details from database by user _id comming from verifyJWT middleware
+
+  const user = await User.findById(req.user?._id);
+
+  //* 3- Match Old password provided by user to password saved in database of that user
+
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "invalid Old Password");
+  }
+  //* 4- set New User password and save doc in DB
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  //* 5- Send Response
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+
+//TODO: Get Current User Details
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  //* Send User details of Loggedin user.This will be accessible only if user is logged in.
+  //* Middleware verifyJWT is providing user.
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, req.user, "User fetched successfully"));
+});
+
+export {
+  registerUser,
+  loginUser,
+  LogoutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+};
