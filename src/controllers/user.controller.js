@@ -253,7 +253,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     //* 4- verify if that user id exist in database or not
 
     const user = await User.findById(decodedToken?._id);
-    console.log("user refresh token database", user.refreshToken);
+    // console.log("user refresh token database", user.refreshToken);
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
@@ -338,6 +338,47 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, req.user, "User fetched successfully"));
 });
 
+//TODO: Update Account Details
+
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { ...rest } = req.body;
+  console.log(rest);
+  //FIXME: password and refresh token should not be updated in this route
+
+  const restrictedKeys = [
+    "_id",
+    "role",
+    "refreshToken",
+    "password",
+    "avatar",
+    "isVerified",
+    "createdAt",
+    "updatedAt",
+  ];
+  const checkRestrictedKeys = restrictedKeys.find((value) => {
+    return value in rest;
+  });
+  console.log(checkRestrictedKeys);
+
+  if (checkRestrictedKeys) {
+    throw new ApiError(400, "You are Not Authorized to change secure data");
+  }
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        ...rest,
+      },
+    },
+    { runValidators: true },
+    { new: true }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -345,4 +386,5 @@ export {
   refreshAccessToken,
   changeCurrentPassword,
   getCurrentUser,
+  updateAccountDetails,
 };
