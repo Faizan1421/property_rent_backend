@@ -110,7 +110,7 @@ in Mongoose. This method is used to generate a JSON Web Token (JWT) refresh toke
 userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
-      id: this._id,
+      _id: this._id,
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
