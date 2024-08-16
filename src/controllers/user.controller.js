@@ -6,7 +6,10 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import fs from "fs";
+import crypto from "crypto";
 import { cookiesOptions } from "../constants.js";
+import { config } from "../config.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 //TODO: Generate Access and Refresh Tokens
 
@@ -92,7 +95,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //* 7-Remove Password and Refresh Token from Response
 
   const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken"
+    "-password -refreshToken -resetPasswordToken -resetPasswordExpires"
   );
 
   //* 8-Check for User Creation
@@ -152,7 +155,7 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
   const loggedInUser = await User.findById(user._id).select(
-    "-password -refreshToken"
+    "-password -refreshToken -resetPasswordToken -resetPasswordExpires"
   );
 
   //* 6-send cookie
@@ -362,6 +365,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     "isVerified",
     "createdAt",
     "updatedAt",
+    "resetPasswordToken",
+    "resetPasswordExpires",
   ];
   // this find method will return first key found from an restricted keys Array
   //if no restricted key found than it will return undefined value.
@@ -390,7 +395,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       },
     },
     { new: true, runValidators: true } //new:true will send updated state od doc, runvalidators:true will triger vilidator set on models before updating.
-  ).select("-password -refreshToken");
+  ).select("-password -refreshToken -resetPasswordToken -resetPasswordExpires");
 
   //* 4- send Response
   return res
@@ -449,7 +454,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  ).select("-password -refreshToken");
+  ).select("-password -refreshToken -resetPasswordToken -resetPasswordExpires");
 
   //* 6- Send Response
 
@@ -460,6 +465,44 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 //TODO: Forget Password Recovery
 
+//FIXME:
+
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    throw new ApiError(400, "email is required for password Recovery");
+  }
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new ApiError(400, "User Not Found");
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; //1 hour expiry
+    await user.save({ validateBeforeSave: false });
+
+    // Send email
+    const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+    const host = config.BASE_URL || req.headers.host;
+    const resetUrl = `${protocol}://${host}/api/v1/users/reset-password/${resetToken}`;
+    const message = `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+      Please click on the following link, or paste this into your browser to complete the process:\n\n
+      ${resetUrl}\n\n
+      If you did not request this, please ignore this email and your password will remain unchanged.\n`;
+
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Request",
+      message,
+    });
+  } catch (error) {
+    throw new ApiError(error.status, error.message);
+  }
+});
+
 export {
   registerUser,
   loginUser,
@@ -469,4 +512,5 @@ export {
   getCurrentUser,
   updateAccountDetails,
   updateUserAvatar,
+  forgotPassword,
 };
