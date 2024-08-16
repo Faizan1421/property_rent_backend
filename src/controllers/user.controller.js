@@ -363,13 +363,17 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     "createdAt",
     "updatedAt",
   ];
-  // this find method will return first key found from an restrictedkeys Array
+  // this find method will return first key found from an restricted keys Array
   //if no restricted key found than it will return undefined value.
+  // find Method returns only first value if found in array.
 
   const checkRestrictedKeys = restrictedKeys.find((key) => {
+    // The in operator returns true if the specified property is in the specified object.
+    // when true it will stop loop and return that key which is found in rest object.
     return key in rest;
   });
 
+  // console.log(checkRestrictedKeys);
   // if any restricted key is found from find method we will throw an error.
 
   if (checkRestrictedKeys) {
@@ -394,6 +398,68 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Account details updated successfully"));
 });
 
+//TODO: Update User Avatar
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+  //TODO:
+  //* 1- Get local file path from req.file
+  //* 2- Get user and user avatar link from database
+  //* 3- split url and get public id from url
+  //* 4- call uploadoncloudinary method and send args with avatar local path and public id of old avatar if any.
+  //* 5- save new avatar url to User Doc
+  //* 6- Send Response
+
+  //* 1- Get local file path from req.file
+
+  const avatarLocalPath = req.file?.path;
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar File is Missing");
+  }
+
+  //* 2- Get user and user avatar link from database
+
+  // destructure req.user and get _id
+  const { _id } = req.user;
+  // we will fetch avatar from user doc after destructuring. because we are receive id and avatar in obj
+  const { avatar } = await User.findOne({ _id }, "avatar");
+  // console.log(avatar);
+
+  //* 3- split url and get public id from url
+
+  const publicIdOfOldAvatar = await avatar?.split("/").pop().split(".")[0];
+
+  //* 4- call uploadoncloudinary method and send args with avatar local path and public id of old avatar if any.
+
+  const newAvatar = await uploadOnCloudinary(
+    avatarLocalPath,
+    publicIdOfOldAvatar
+  );
+  const newAvatarUrl = newAvatar?.url;
+  if (!newAvatarUrl) {
+    throw new ApiError(400, "Error while uploading on avatar");
+  }
+
+  //* 5- save new avatar url to User Doc and set New to true for updated data to be sent in response
+
+  const user = await User.findByIdAndUpdate(
+    _id,
+    {
+      $set: {
+        avatar: newAvatarUrl,
+      },
+    },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  //* 6- Send Response
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Avatar Updated Successfully"));
+});
+
+//TODO: Forget Password Recovery
+
 export {
   registerUser,
   loginUser,
@@ -402,4 +468,5 @@ export {
   changeCurrentPassword,
   getCurrentUser,
   updateAccountDetails,
+  updateUserAvatar,
 };

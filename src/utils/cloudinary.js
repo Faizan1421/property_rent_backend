@@ -20,7 +20,10 @@ cloudinary.config({
  * file was successfully uploaded, or `null` if there was an error during the upload process.
  */
 
-const uploadOnCloudinary = async (localFilePath) => {
+const uploadOnCloudinary = async (
+  localFilePath,
+  publicIdOfOldAvatar = null
+) => {
   try {
     if (!localFilePath) return null;
     //Upload the File on Cloudinary
@@ -36,10 +39,15 @@ const uploadOnCloudinary = async (localFilePath) => {
         },
       ],
     });
-
+    // console.log(publicIdOfOldAvatar);
     //File has Uploaded Successfully
     fs.unlinkSync(localFilePath);
     // console.log(cloudinaryResponse);
+
+    //! we are receiving public id if we want to delete old avatar.
+    if (publicIdOfOldAvatar) {
+      await cloudinary.uploader.destroy(publicIdOfOldAvatar);
+    }
     return cloudinaryResponse;
   } catch (error) {
     console.log("Error While Uploading to Cloudinary", error);
