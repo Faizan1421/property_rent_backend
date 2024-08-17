@@ -14,7 +14,7 @@ import {
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { lockOut } from "../middlewares/lockout.js";
+import { lockOut } from "../middlewares/lockout.middleware.js";
 const router = Router();
 
 router.route("/register").post(upload.single("avatar"), registerUser);

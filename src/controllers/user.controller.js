@@ -94,7 +94,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //* 7-Remove Password and Refresh Token from Response
 
   const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken -resetPasswordToken -resetPasswordExpires"
+    "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
   );
 
   //* 8-Check for User Creation
@@ -147,6 +147,11 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid User Credentials");
   }
+  //!Imp if i have configured middleware of lockout on forgot password
+  // Reset forgot password attempts if any
+  user.passwordResetAttempts = 0;
+  user.passwordResetLockUntil = Date.now();
+  await user.save({ validateBeforeSave: false, new: true });
 
   //* 5-access and referesh token
 
@@ -154,7 +159,7 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
   const loggedInUser = await User.findById(user._id).select(
-    "-password -refreshToken -resetPasswordToken -resetPasswordExpires"
+    "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
   );
 
   //* 6-send cookie
@@ -366,6 +371,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     "updatedAt",
     "resetPasswordToken",
     "resetPasswordExpires",
+    "passwordResetAttempts",
+    "passwordResetLockUntil",
   ];
   // this find method will return first key found from an restricted keys Array
   //if no restricted key found than it will return undefined value.
@@ -394,7 +401,9 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       },
     },
     { new: true, runValidators: true } //new:true will send updated state od doc, runvalidators:true will triger vilidator set on models before updating.
-  ).select("-password -refreshToken -resetPasswordToken -resetPasswordExpires");
+  ).select(
+    "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
+  );
 
   //* 4- send Response
   return res
@@ -453,7 +462,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  ).select("-password -refreshToken -resetPasswordToken -resetPasswordExpires");
+  ).select(
+    "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
+  );
 
   //* 6- Send Response
 
@@ -476,19 +487,22 @@ const forgotPassword = asyncHandler(async (req, res) => {
   //*1- Get Email from req.body
 
   const { email } = req.body;
-  if (!email) {
-    throw new ApiError(400, "email is required for password Recovery");
-  }
+  //! we donot need to validate email if its already done in lockout middleware
+  // if (!email) {
+  //   throw new ApiError(400, "email is required for password Recovery");
+  // }
 
   try {
     // *2- find user from DB by using Email
+
     const user = await User.findOne({ email });
-    if (!user) {
-      throw new ApiError(400, "User Not Found");
-    }
+    //! we donot need to validate user if its already done in lockout middleware
+    // if (!user) {
+    //   throw new ApiError(400, "User Not Found");
+    // }
 
     //*3- Generate -Reset Password token and reset password Expiry- By using setResetPasswordToken method we created in model.
-    // we are receiving resetToken from setResetPasswordToken, because we are returning resetToken from that methhod calling.
+    // we are receiving resetToken from setResetPasswordToken, because we are returning resetToken from that method calling.
     const resetToken = await user.setResetPasswordToken();
 
     // *4- Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
@@ -527,7 +541,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   }
 });
 
-// TODO: Reset password- Get Request to Verify reset token and get user.
+// TODO: Reset password- Get Request to Verify reset token and send response back
 
 const resetPassword = asyncHandler(async (req, res) => {
   //TODO:
@@ -554,6 +568,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     if (!user) {
       throw new ApiError(400, "Password reset token is invalid or has expired");
     }
+
     //* 4-Send Response
 
     return res.status(200).json(new ApiResponse(200, {}, "Token is Valid"));
@@ -599,10 +614,13 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
     //* 6- Set resetPasswordToken and resetpasswordexpiry to undefined and Reset attempts on successful password reset.
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
+
+    //!Imp Reset passwordResetAttempts and passwordResetLockUntil if i have configured middleware of lockout on forgot password.
     user.passwordResetAttempts = 0;
+    user.passwordResetLockUntil = Date.now();
     await user.save({ validateBeforeSave: false });
 
-    //* 10- Send Response
+    //* 7- Send Response
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "Your password has been updated"));

@@ -4,7 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 //!  Implement the lockout logic in your forgot password route:
 
-const lockOut = asyncHandler(async (req, res, next) => {
+const lockOut = asyncHandler(async (req, _, next) => {
   const { email } = req.body;
   if (!email) {
     throw new ApiError(400, "email is required for password Recovery");
@@ -32,13 +32,14 @@ const lockOut = asyncHandler(async (req, res, next) => {
     //* 5-Check if max attempts reached
     if (user.passwordResetAttempts >= 5) {
       user.passwordResetLockUntil = Date.now() + 600000; // Lock for 10 Minutes
-      await user.save({ validateBeforeSave: false });
+      await user.save({ validateBeforeSave: false, new: true });
       throw new ApiError(
         403,
         "Too many attempts. Account locked for 10 Minutes"
       );
     }
-    await user.save({ validateBeforeSave: false });
+    await user.save({ validateBeforeSave: false, new: true });
+    req.user = user;
     next();
     //! lockout logic completed here.
   } catch (error) {

@@ -102,7 +102,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-//* Reset password Token Method. It will set reset password token and reset password token expiry in user DB
+//TODO: Reset password Token Method. It will set reset password token and reset password token expiry in user DB
 
 userSchema.methods.setResetPasswordToken = async function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
