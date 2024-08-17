@@ -14,6 +14,7 @@ import {
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { lockOut } from "../middlewares/lockout.js";
 const router = Router();
 
 router.route("/register").post(upload.single("avatar"), registerUser);
@@ -26,7 +27,7 @@ router.route("/update-account").patch(verifyJWT, updateAccountDetails);
 router
   .route("/avatar")
   .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
-router.route("/forgot-password").post(forgotPassword);
+router.route("/forgot-password").post(lockOut, forgotPassword);
 router
   .route("/reset-password/:token")
   .get(resetPassword)

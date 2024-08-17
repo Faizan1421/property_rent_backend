@@ -466,12 +466,12 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 const forgotPassword = asyncHandler(async (req, res) => {
   //TODO:
-  //*1- Get Email from req.body
-  //*2- find user from DB by using Email
-  //*3- Generate -Reset Password token and reset password Expiry- By using crypto dependency and set it to user doc
-  //*4- Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
-  //*5- call sendEmail function - Nodemailer Utility and set options and store response in variable
-  //*6 Send Response
+  //* 1-Get Email from req.body
+  //* 2-find user from DB by using Email
+  //* 3-Generate -Reset Password token and reset password Expiry- By using setResetPasswordToken method we created in model.
+  //* 4-Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
+  //* 5-call sendEmail function - Nodemailer Utility and set options and store response in variable
+  //* 6-Send Response
 
   //*1- Get Email from req.body
 
@@ -512,8 +512,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
       message,
     });
 
-    // *6 Send Response
-
+    //* 6-Send Response
     return res
       .status(200)
       .json(
@@ -572,7 +571,7 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
   //* 3- find user that matches resetpasswordtoken with token comming in params and resetpasswordexpiry check.
   //* 4-Throw an Error if Token is not matched in any User Doc
   //* 5-Set New password
-  //* 6- Set resetPasswordToken and resetpasswordexpiry to undefined in user doc and save doc
+  //* 6- Set resetPasswordToken and resetpasswordexpiry to undefined and Reset attempts on successful password reset.
   //* 7- Send Response
 
   //* 1- Get reset Token from req.params
@@ -597,12 +596,13 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
     //* 5-Set New password
     user.password = newPassword;
 
-    //* 6- Set resetPasswordToken and resetpasswordexpiry to undefined in user doc and save doc
+    //* 6- Set resetPasswordToken and resetpasswordexpiry to undefined and Reset attempts on successful password reset.
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
+    user.passwordResetAttempts = 0;
     await user.save({ validateBeforeSave: false });
 
-    //* 7- Send Response
+    //* 10- Send Response
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "Your password has been updated"));

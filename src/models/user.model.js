@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { type } from "os";
 
 const userSchema = new Schema(
   {
@@ -67,6 +68,13 @@ const userSchema = new Schema(
       type: String,
     },
     resetPasswordExpires: {
+      type: Date,
+    },
+    passwordResetAttempts: {
+      type: Number,
+      default: 0,
+    },
+    passwordResetLockUntil: {
       type: Date,
     },
   },
