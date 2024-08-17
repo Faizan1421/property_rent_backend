@@ -6,7 +6,6 @@ import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import fs from "fs";
-import crypto from "crypto";
 import { cookiesOptions } from "../constants.js";
 import { config } from "../config.js";
 import { sendEmail } from "../utils/sendEmail.js";
@@ -488,11 +487,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
       throw new ApiError(400, "User Not Found");
     }
 
-    //*3- Generate -Reset Password token and reset password Expiry- By using crypto dependency and set it to user doc
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; //1 hour expiry
-    await user.save({ validateBeforeSave: false });
+    //*3- Generate -Reset Password token and reset password Expiry- By using setResetPasswordToken method we created in model.
+    // we are receiving resetToken from setResetPasswordToken, because we are returning resetToken from that methhod calling.
+    const resetToken = await user.setResetPasswordToken();
 
     // *4- Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
 
@@ -509,12 +506,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
     // *5- call sendEmail function - Nodemailer Utility and set options and store response in variable
 
-    const info = await sendEmail({
+    await sendEmail({
       to: user.email,
       subject: "Password Reset Request",
       message,
     });
-    console.log(info);
 
     // *6 Send Response
 
@@ -534,7 +530,56 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
 // TODO: Reset password- Get Request to Verify reset token and get user.
 
-const resetPassword = asyncHandler(async () => {});
+const resetPassword = asyncHandler(async (req, res) => {
+  //TODO:
+
+  //* 1- get Token from req.params
+  //* 2- find user that matches resetpasswordtoken with token comming in params and resetpasswordexpiry check
+  //* 3-Throw an Error if Token is not matched in any User Doc
+  //* 4-Send Response
+
+  try {
+    //* 1- get Token from req.params
+
+    const token = req.params.token;
+
+    //* 2- find user that matches resetpasswordtoken with token comming in params and resetpasswordexpiry check
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    //* 3-Throw an Error if Token is not matched in any User Doc
+
+    if (!user) {
+      throw new ApiError(400, "Password reset token is invalid or has expired");
+    }
+    //* 4-Send Response
+
+    return res.status(200).json(new ApiResponse(200, {}, "Token is Valid"));
+  } catch (error) {
+    throw new ApiError(error.status, error.message);
+  }
+});
+
+// TODO: Reset password- POST Request to Verify reset token and update User Password.User will send new password in body along token in params
+
+const resetPasswordNew = asyncHandler(async (req, res) => {
+  //TODO:
+  //* 1- Get reset Token from req.params
+  //* 2- Get password from req.body
+  //* 3- find user that matches resetpasswordtoken with token comming in params and resetpasswordexpiry check.
+  //* 4-Throw an Error if Token is not matched in any User Doc
+  //* 5-Set New password
+  //* 6- Set resetPasswordToken and resetpasswordexpiry to undefined in user doc and save doc
+  //* 7- Send Response
+
+  //* 1- Get reset Token from req.params
+
+  const token = req.params.token;
+});
+
 export {
   registerUser,
   loginUser,
@@ -546,4 +591,5 @@ export {
   updateUserAvatar,
   forgotPassword,
   resetPassword,
+  resetPasswordNew,
 };
