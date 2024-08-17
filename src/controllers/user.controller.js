@@ -463,46 +463,78 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Avatar Updated Successfully"));
 });
 
-//TODO: Forget Password Recovery
-
-//FIXME:
+//TODO: Forget Password Recovery- For sending password reset email to user registered email.
 
 const forgotPassword = asyncHandler(async (req, res) => {
+  //TODO:
+  //*1- Get Email from req.body
+  //*2- find user from DB by using Email
+  //*3- Generate -Reset Password token and reset password Expiry- By using crypto dependency and set it to user doc
+  //*4- Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
+  //*5- call sendEmail function - Nodemailer Utility and set options and store response in variable
+  //*6 Send Response
+
+  //*1- Get Email from req.body
+
   const { email } = req.body;
   if (!email) {
     throw new ApiError(400, "email is required for password Recovery");
   }
+
   try {
+    // *2- find user from DB by using Email
     const user = await User.findOne({ email });
     if (!user) {
       throw new ApiError(400, "User Not Found");
     }
 
-    // Generate reset token
+    //*3- Generate -Reset Password token and reset password Expiry- By using crypto dependency and set it to user doc
     const resetToken = crypto.randomBytes(20).toString("hex");
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000; //1 hour expiry
     await user.save({ validateBeforeSave: false });
 
-    // Send email
+    // *4- Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
+
     const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+
     const host = config.BASE_URL || req.headers.host;
+
     const resetUrl = `${protocol}://${host}/api/v1/users/reset-password/${resetToken}`;
+
     const message = `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
       Please click on the following link, or paste this into your browser to complete the process:\n\n
       ${resetUrl}\n\n
       If you did not request this, please ignore this email and your password will remain unchanged.\n`;
 
-    await sendEmail({
+    // *5- call sendEmail function - Nodemailer Utility and set options and store response in variable
+
+    const info = await sendEmail({
       to: user.email,
       subject: "Password Reset Request",
       message,
     });
+    console.log(info);
+
+    // *6 Send Response
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          {},
+          "Password Recovery Email sent. kindly check Your Inbox"
+        )
+      );
   } catch (error) {
     throw new ApiError(error.status, error.message);
   }
 });
 
+// TODO: Reset password- Get Request to Verify reset token and get user.
+
+const resetPassword = asyncHandler(async () => {});
 export {
   registerUser,
   loginUser,
@@ -513,4 +545,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   forgotPassword,
+  resetPassword,
 };

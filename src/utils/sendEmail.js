@@ -1,11 +1,11 @@
 import nodemailer from "nodemailer";
+import { ApiError } from "./ApiError.js";
 
-//FIXME:
 // Create a transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   host: process.env.EMAIL_HOST,
-  port: 465,
+  port: process.env.EMAIL_PORT || 465,
   secure: true,
   auth: {
     user: process.env.EMAIL_USER,
@@ -25,10 +25,10 @@ const sendEmail = async (options) => {
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent: " + info.response);
+
     return info;
   } catch (error) {
-    console.error("Error sending email:", error);
-    throw error;
+    throw new ApiError(400, error.message);
   }
 };
 

@@ -9,6 +9,7 @@ import {
   updateAccountDetails,
   updateUserAvatar,
   forgotPassword,
+  resetPassword,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -25,5 +26,6 @@ router
   .route("/avatar")
   .patch(verifyJWT, upload.single("avatar"), updateUserAvatar);
 router.route("/forgot-password").post(forgotPassword);
+router.route("/reset-password/:token").get(resetPassword);
 
 export default router;
