@@ -576,8 +576,39 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
   //* 7- Send Response
 
   //* 1- Get reset Token from req.params
-
   const token = req.params.token;
+
+  //* 2- Get password from req.body
+  const { password: newPassword } = req.body;
+
+  try {
+    //* 3- find user that matches resetpasswordtoken with token comming in params and resetpasswordexpiry check.
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    //* 4-Throw an Error if Token is not matched in any User Doc
+    if (!user) {
+      throw new ApiError(400, "Password reset token is invalid or has expired");
+    }
+
+    //* 5-Set New password
+    user.password = newPassword;
+
+    //* 6- Set resetPasswordToken and resetpasswordexpiry to undefined in user doc and save doc
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    //* 7- Send Response
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Your password has been updated"));
+  } catch (error) {
+    throw new ApiError(error.status, error.message);
+  }
 });
 
 export {
