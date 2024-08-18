@@ -4,7 +4,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
 import fs from "fs";
 import { cookiesOptions } from "../constants.js";
 import { config } from "../config.js";
@@ -150,7 +149,7 @@ const loginUser = asyncHandler(async (req, res) => {
   //!Imp if i have configured middleware of lockout on forgot password
   // Reset forgot password attempts if any
   user.passwordResetAttempts = 0;
-  user.passwordResetLockUntil = Date.now();
+  user.passwordResetLockUntil = null;
   await user.save({ validateBeforeSave: false, new: true });
 
   //* 5-access and referesh token
@@ -477,35 +476,36 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 const forgotPassword = asyncHandler(async (req, res) => {
   //TODO:
-  //* 1-Get Email from req.body
-  //* 2-find user from DB by using Email
-  //* 3-Generate -Reset Password token and reset password Expiry- By using setResetPasswordToken method we created in model.
-  //* 4-Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
-  //* 5-call sendEmail function - Nodemailer Utility and set options and store response in variable
-  //* 6-Send Response
+  //* 1-Get User from req.user which we had set in middleware lockout
+  //* 2-Generate -Reset Password token and reset password Expiry- By using setResetPasswordToken method we created in model.
+  //* 3-Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
+  //* 4-call sendEmail function - Nodemailer Utility and set options and store response in variable
+  //* 5-Send Response
 
-  //*1- Get Email from req.body
+  //- Get Email from req.body
 
-  const { email } = req.body;
-  //! we donot need to validate email if its already done in lockout middleware
+  //! we have implemented in middleware-dont need here.
+  // const { email } = req.body;
   // if (!email) {
   //   throw new ApiError(400, "email is required for password Recovery");
   // }
 
   try {
-    // *2- find user from DB by using Email
+    //* 1-Get User from req.user which we had set in middleware lockout
+    const user = req.user;
 
-    const user = await User.findOne({ email });
-    //! we donot need to validate user if its already done in lockout middleware
+    //- find user from DB by using Email
+    //! we have implemented in middleware-dont need here.
+    // const user = await User.findOne({ email }); /
     // if (!user) {
     //   throw new ApiError(400, "User Not Found");
     // }
 
-    //*3- Generate -Reset Password token and reset password Expiry- By using setResetPasswordToken method we created in model.
+    //* 2- Generate -Reset Password token and reset password Expiry- By using setResetPasswordToken method we created in model.
     // we are receiving resetToken from setResetPasswordToken, because we are returning resetToken from that method calling.
     const resetToken = await user.setResetPasswordToken();
 
-    // *4- Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
+    //* 3- Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
 
     const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
 
@@ -518,7 +518,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
       ${resetUrl}\n\n
       If you did not request this, please ignore this email and your password will remain unchanged.\n`;
 
-    // *5- call sendEmail function - Nodemailer Utility and set options and store response in variable
+    // *4- call sendEmail function - Nodemailer Utility and set options and store response in variable
 
     await sendEmail({
       to: user.email,
@@ -526,7 +526,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
       message,
     });
 
-    //* 6-Send Response
+    //* 5-Send Response
     return res
       .status(200)
       .json(
@@ -617,7 +617,7 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
 
     //!Imp Reset passwordResetAttempts and passwordResetLockUntil if i have configured middleware of lockout on forgot password.
     user.passwordResetAttempts = 0;
-    user.passwordResetLockUntil = Date.now();
+    user.passwordResetLockUntil = null;
     await user.save({ validateBeforeSave: false });
 
     //* 7- Send Response
