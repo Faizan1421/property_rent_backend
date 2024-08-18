@@ -629,6 +629,45 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
   }
 });
 
+// TODO: Become A seller for users only
+const becomeSeller = asyncHandler(async (req, res) => {
+  //TODO:
+  //* 1-Get _id from req.user which was set by verifyJWT middleware in req
+  //* 2- find user by an _id and change role to seller, and must set runvalidators true for updating field and new to true for getting latest data.
+  //* 3- Return Response
+
+  //* 1-Get _id from req.user which was set by verifyJWT middleware in req. in become-a-seller route.
+  const { _id } = req.user;
+
+  try {
+    //* 2- find user by an _id and change role to seller, and must set runvalidators true for updating field and new to true for getting latest data.
+    const user = await User.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          role: "seller",
+        },
+      },
+      { runValidators: true, new: true } //new:true will send updated state od doc, runvalidators:true will triger vilidator set on models before updating.
+    ).select(
+      "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
+    );
+
+    //* 3- Return Response
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          user,
+          "Congratulation !!! you have Successfully created Seller Account"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(error.status, error.message);
+  }
+});
+
 export {
   registerUser,
   loginUser,
@@ -641,4 +680,5 @@ export {
   forgotPassword,
   resetPassword,
   resetPasswordNew,
+  becomeSeller,
 };

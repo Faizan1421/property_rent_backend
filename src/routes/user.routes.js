@@ -11,10 +11,12 @@ import {
   forgotPassword,
   resetPassword,
   resetPasswordNew,
+  becomeSeller,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { lockOut } from "../middlewares/lockout.middleware.js";
+import { checkRole } from "../middlewares/checkRole.middleware.js";
 const router = Router();
 
 router.route("/register").post(upload.single("avatar"), registerUser);
@@ -33,4 +35,7 @@ router
   .get(resetPassword)
   .post(resetPasswordNew);
 
+router
+  .route("/become-a-seller")
+  .post(verifyJWT, checkRole("user"), becomeSeller);
 export default router;
