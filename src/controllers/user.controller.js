@@ -45,76 +45,82 @@ const registerUser = asyncHandler(async (req, res) => {
   // * 1-Get User Details from Frontend
   const { username, email, fullName, gender, password, phone } = req.body;
 
-  //* 2-Validation - Not Empty
-
-  /* This code snippet is performing validation to ensure that all the required fields (username,
+  try {
+    //* 2-Validation - Not Empty
+    /* This code snippet is performing validation to ensure that all the required fields (username,
   email, fullName, gender, password, phone) are not empty.Javascript some method is used to return boolean value.
   Here's a breakdown of what it does: */
 
-  if (
-    [username, email, fullName, gender, password, phone].some(
-      (field) => field?.trim() === undefined || ""
-    )
-  ) {
-    throw new ApiError(400, "All Fields are Required");
+    if (
+      [username, email, fullName, gender, password, phone].some(
+        (field) => field?.trim() === undefined || ""
+      )
+    ) {
+      throw new ApiError(400, "All Fields are Required");
+    }
+
+    //* 3-Check If User Already Exists: username,email
+
+    const existedUser = await User.findOne({
+      $or: [{ username }, { email }],
+    });
+    if (existedUser) {
+      throw new ApiError(
+        409,
+        "User with Given Email or Username Already Exists"
+      );
+    }
+
+    //* 4-Check For Avatar/Image
+
+    // console.log(req.file);
+    const avatarLocalPath = req.file?.path;
+    // console.log(avatarLocalPath);
+
+    //* 5-Upload to Cloudinary - Avatar/Image
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    //* 6-Create User Object by User Model - Create Entry in DB
+
+    const user = await User.create({
+      username: username.replace(/ /g, ""), // replace method will remove spaces from inside string.
+      email,
+      fullName,
+      gender,
+      password,
+      phone,
+      avatar: avatar?.url || "",
+    });
+
+    //* 7-Remove Password and Refresh Token from Response
+
+    const createdUser = await User.findById(user._id).select(
+      "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
+    );
+
+    //* 8-Check for User Creation
+
+    if (!createdUser) {
+      throw new ApiError(500, "Something went wrong while creating a User");
+    }
+
+    //* 9-return Response
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, createdUser, "User Registered Successfully"));
+  } catch (error) {
+    throw new ApiError(error.status, error.message);
   }
-
-  //* 3-Check If User Already Exists: username,email
-
-  const existedUser = await User.findOne({
-    $or: [{ username }, { email }],
-  });
-  if (existedUser) {
-    throw new ApiError(409, "User with Given Email or Username Already Exists");
-  }
-
-  //* 4-Check For Avatar/Image
-
-  // console.log(req.file);
-  const avatarLocalPath = req.file?.path;
-  // console.log(avatarLocalPath);
-
-  //* 5-Upload to Cloudinary - Avatar/Image
-
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-
-  //* 6-Create User Object by User Model - Create Entry in DB
-
-  const user = await User.create({
-    username: username.replace(/ /g, ""), // replace method will remove spaces from inside string.
-    email,
-    fullName,
-    gender,
-    password,
-    phone,
-    avatar: avatar?.url || "",
-  });
-
-  //* 7-Remove Password and Refresh Token from Response
-
-  const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
-  );
-
-  //* 8-Check for User Creation
-
-  if (!createdUser) {
-    throw new ApiError(500, "Something went wrong while creating a User");
-  }
-
-  //* 9-return Response
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, createdUser, "User Registered Successfully"));
 });
 
 //TODO: User Login
 
-const loginUser = asyncHandler(async (req, res) => {
+const loginUser = asyncHandler(async (req, res, next) => {
   //TODO:
   //* 1-req body -> data
-  //* 2-username or email
+  //* 2-set username or email in data variable
   //* 3-find the user
   //* 4-password check
   //* 5-access and referesh token
@@ -122,62 +128,66 @@ const loginUser = asyncHandler(async (req, res) => {
 
   //* 1-req body -> data
 
-  const { username, email, password } = req.body;
+  const { userEmail, password } = req.body;
+  try {
+    //* 2-set username or email in data variable
+    let data = userEmail;
+    if (!data) {
+      throw new ApiError(400, "Username or email is Required");
+    }
 
-  //* 2-username or email
+    //* 3-find the user
 
-  if (!(username || email)) {
-    throw new ApiError(400, "Username or email is Required");
-  }
+    const user = await User.findOne({
+      $or: [{ username: data }, { email: data }],
+    });
+    if (!user) {
+      throw new ApiError(404, "User doesnot Exist");
+    }
 
-  //* 3-find the user
+    //* 4-password check
 
-  const user = await User.findOne({
-    $or: [{ username }, { email }],
-  });
-  if (!user) {
-    throw new ApiError(404, "User doesnot Exist");
-  }
+    const isPasswordValid = await user.isPasswordCorrect(password);
 
-  //* 4-password check
+    if (!isPasswordValid) {
+      throw new ApiError(401, "Invalid User Credentials");
+    }
+    //!Imp if i have configured middleware of lockout on forgot password
+    // Reset forgot password attempts if any
+    user.passwordResetAttempts = 0;
+    user.passwordResetLockUntil = null;
+    await user.save({ validateBeforeSave: false, new: true });
 
-  const isPasswordValid = await user.isPasswordCorrect(password);
+    //* 5-access and referesh token
 
-  if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid User Credentials");
-  }
-  //!Imp if i have configured middleware of lockout on forgot password
-  // Reset forgot password attempts if any
-  user.passwordResetAttempts = 0;
-  user.passwordResetLockUntil = null;
-  await user.save({ validateBeforeSave: false, new: true });
-
-  //* 5-access and referesh token
-
-  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
-    user._id
-  );
-  const loggedInUser = await User.findById(user._id).select(
-    "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
-  );
-
-  //* 6-send cookie
-
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, cookiesOptions)
-    .cookie("refreshToken", refreshToken, cookiesOptions)
-    .json(
-      new ApiResponse(
-        200,
-        {
-          user: loggedInUser,
-          accessToken,
-          refreshToken,
-        },
-        "User LogedIn SUccessfully"
-      )
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
+      user._id
     );
+    const loggedInUser = await User.findById(user._id).select(
+      "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
+    );
+
+    //* 6-send cookie
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, cookiesOptions)
+      .cookie("refreshToken", refreshToken, cookiesOptions)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            user: loggedInUser,
+            accessToken,
+            refreshToken,
+          },
+          "User LogedIn SUccessfully"
+        )
+      );
+  } catch (error) {
+    next(error);
+    // throw new ApiError(error.status, error.message);
+  }
 });
 
 // TODO: Logout User
@@ -668,6 +678,11 @@ const becomeSeller = asyncHandler(async (req, res) => {
   }
 });
 
+//TODO:
+// implement history logic (listing viewed by user)
+//implement viewing other seller/user public profile - /api/v1/users/u/:id -> GET request
+//implement viewing seller all listings - /api/v1/users/u/:id/listings   -> GET request
+//implement viewing seller's single listing - /api/v1/users/u/:id/listings/:listing-id -> GET request
 export {
   registerUser,
   loginUser,

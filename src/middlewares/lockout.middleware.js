@@ -58,12 +58,10 @@ const lockOut = asyncHandler(async (req, _, next) => {
         "Too many attempts. Account locked for 10 Minutes"
       );
     }
-    //!reset password attempts
 
     await user.save({ validateBeforeSave: false, new: true });
     req.user = user;
     next();
-    //! lockout logic completed here.
   } catch (error) {
     throw new ApiError(error.status, error.message);
   }
