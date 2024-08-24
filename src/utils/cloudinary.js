@@ -48,6 +48,7 @@ const uploadOnCloudinary = async (
     if (publicIdOfOldAvatar) {
       await cloudinary.uploader.destroy(publicIdOfOldAvatar);
     }
+    console.log(cloudinaryResponse);
     return cloudinaryResponse;
   } catch (error) {
     console.log("Error While Uploading to Cloudinary", error);

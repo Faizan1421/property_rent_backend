@@ -4,7 +4,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import fs from "fs";
 import { cookiesOptions } from "../constants.js";
 import { config } from "../config.js";
 import { sendEmail } from "../utils/sendEmail.js";
