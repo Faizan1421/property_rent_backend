@@ -1,6 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
+import { ApiError } from "./ApiError.js";
+
 dotenv.config();
 // Configuration
 
@@ -48,7 +50,7 @@ const uploadOnCloudinary = async (
     if (publicIdOfOldAvatar) {
       await cloudinary.uploader.destroy(publicIdOfOldAvatar);
     }
-    console.log(cloudinaryResponse);
+    // console.log(cloudinaryResponse);
     return cloudinaryResponse;
   } catch (error) {
     console.log("Error While Uploading to Cloudinary", error);
@@ -58,4 +60,56 @@ const uploadOnCloudinary = async (
   }
 };
 
-export { uploadOnCloudinary };
+const bulkUploadOnCloudinary = async ({
+  localImagesPath,
+  publicIds = null,
+}) => {
+  try {
+    if (!localImagesPath) return null;
+    let cloudinaryResponse = [];
+    for (const imagepath of localImagesPath) {
+      const response = await cloudinary.uploader.upload(imagepath, {
+        resource_type: "auto",
+        transformation: [
+          {
+            fetch_format: "auto",
+            width: 1000,
+            crop: "scale",
+            quality: "auto",
+            fetch_format: "auto",
+          },
+        ],
+      });
+
+      cloudinaryResponse.push({
+        url: response.url,
+        public_id: response.public_id,
+      });
+    }
+
+    //File has Uploaded Successfully
+    localImagesPath?.map((res) => {
+      fs.unlinkSync(res);
+    });
+
+    //! we are receiving public id if we want to delete old avatar.
+    if (publicIds) {
+      publicIds.map(async (res, i, err) => {
+        await cloudinary.uploader.destroy(res);
+        if (err) {
+          throw new ApiError(err.statusCode, err.message);
+        }
+      });
+    }
+    return cloudinaryResponse;
+  } catch (error) {
+    console.log("Error While Uploading to Cloudinary", error);
+
+    // remove the locally saved temporary file as the upload operation got failed
+    localImagesPath.map((res) => {
+      fs.unlinkSync(res);
+    });
+    return null;
+  }
+};
+export { uploadOnCloudinary, bulkUploadOnCloudinary };

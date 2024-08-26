@@ -26,7 +26,6 @@ const generateAccessAndRefereshTokens = async (userId) => {
     );
   }
 };
-
 //TODO: User Registration
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -35,8 +34,8 @@ const registerUser = asyncHandler(async (req, res) => {
   //* 2-Validation - Not Empty
   //* 3-Check If User Already Exists: username,email
   //* 4-Check For Avatar/Image
-  //* 5-Upload to Cloudinary - Avatar/Image
-  //* 6-Create User Object by User Model - Create Entry in DB
+  //* 5-Create User Object by User Model - Create Entry in DB
+  //* 6-Upload to Cloudinary - Avatar/Image
   //* 7-Remove Password and Refresh Token from Response
   //* 8-Check for User Creation
   //* 9-return Response
@@ -76,11 +75,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.file?.path;
     // console.log(avatarLocalPath);
 
-    //* 5-Upload to Cloudinary - Avatar/Image
-
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-
-    //* 6-Create User Object by User Model - Create Entry in DB
+    //* 5-Create User Object by User Model - Create Entry in DB
 
     const user = await User.create({
       username: username.replace(/ /g, ""), // replace method will remove spaces from inside string.
@@ -89,8 +84,16 @@ const registerUser = asyncHandler(async (req, res) => {
       gender,
       password,
       phone,
-      avatar: avatar?.url || "",
     });
+    if (!user) {
+      throw new ApiError(400, "somme thing went wrong....");
+    }
+
+    //* 6-Upload to Cloudinary - Avatar/Image --IMP use it here because it doesnot delete image on cloudinary if there is an validation error
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    user.avatar = avatar?.url || "";
+    await user.save({ validateBeforeSave: true });
 
     //* 7-Remove Password and Refresh Token from Response
 
