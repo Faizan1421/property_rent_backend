@@ -6,7 +6,7 @@ import { Category } from "../models/category.model.js";
 import { bulkUploadOnCloudinary } from "../utils/cloudinary.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
-
+import fs from "fs";
 //TODO: Create Listing
 
 const createListing = asyncHandler(async (req, res) => {
@@ -82,6 +82,13 @@ const createListing = asyncHandler(async (req, res) => {
 });
 
 //TODO: delete Listing
+//* 1-Get Id of listing from params
+//* 2-Get userid from req set by middleware verifyjwt
+//* 3-check if listing id is valid/objectid  or not
+//* 4-find listing by id
+//* 5-check/verify if user is authorized to delete this listing user cannot delete other's listings
+//* 6-delete listing
+//* 7-send response
 
 const deleteListing = asyncHandler(async (req, res) => {
   //* 1-Get Id of listing from params
@@ -106,6 +113,9 @@ const deleteListing = asyncHandler(async (req, res) => {
     if (listing.owner.toString() !== userId.toString()) {
       throw new ApiError(403, "You are not authorized to delete this listing");
     }
+    if (listing.isSold) {
+      throw new ApiError(403, "You cannot delete a sold listing");
+    }
     //* 6-delete listing
     await Listing.deleteOne({ _id: listingId });
 
@@ -119,5 +129,191 @@ const deleteListing = asyncHandler(async (req, res) => {
 });
 
 //TODO: Update Listing
+//* 1-Get Id of listing from params
+//* 2-Get userid from req set by middleware verifyjwt
+//* 3-Get data from req.body
+//* 4-find listing from DB
+//* 5-Update DB Object
+//* 6-send Response
 
-export { createListing, deleteListing };
+const updateListing = asyncHandler(async (req, res) => {
+  //* 1-Get Id of listing from params
+  const listingId = req.params.id;
+  //* 2-Get userid from req set by middleware verifyjwt
+  const userId = req.user._id;
+  //* 3-Get data from req.body
+  const { categories, isSold, ...rest } = req.body;
+
+  //get categories from database because its a refernce to store in listing
+  const getCategories = await Category.find({ name: { $in: categories } });
+
+  try {
+    //* 4-find listing from DB
+
+    const listing = await Listing.findById(listingId);
+    if (!listing) {
+      throw new ApiError(404, "Listing not found");
+    }
+
+    if (listing.owner.toString() !== userId.toString()) {
+      throw new ApiError(403, "You are not authorized to update this listing");
+    }
+
+    if (listing.isSold) {
+      throw new ApiError(403, "You cannot Update a sold listing");
+    }
+
+    //Check if seller is not updating secured data
+    const restrictedKeys = ["_id", "owner"];
+    const checkRestrictedKeys = restrictedKeys.find((key) => {
+      // The in operator returns true if the specified property is in the specified object.
+      // when true it will stop loop and return that key which is found in rest object.
+      return key in rest;
+    });
+    // if any restricted key is found from find method we will throw an error.
+
+    if (checkRestrictedKeys) {
+      throw new ApiError(400, "You are Not Authorized to change secure data");
+    }
+
+    //* 5-Update DB Object
+
+    const updatedListing = await Listing.findByIdAndUpdate(
+      listingId,
+      {
+        $set: {
+          ...rest,
+        },
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (categories) {
+      updatedListing.categories = getCategories;
+    }
+    // check if user is trying to update isSold property.if listing is sold we will not allow to update it
+    if (isSold && listing.isSold === false) {
+      updatedListing.isSold = true;
+    }
+    await updatedListing.save({ new: true, validateBeforeSave: false });
+
+    //* 6-send Response
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, updatedListing, "Listing updated successfully")
+      );
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
+
+//TODO: Add Listing Images
+//* 1-Get Images from req.files
+//* 2-get user from req.user which was set by verifyjwt middleware
+//* 3-find listing by id
+//* 4-Find local path of images
+//* 5-Update DB Object
+//* 6-Send response
+
+const addListingImages = asyncHandler(async (req, res) => {
+  //* 1-Get Images from req.files
+  const images = req.files;
+  //* 2-get user from req.user which was set by verifyjwt middleware
+  const userId = req.user._id;
+  const listingId = req.params.id;
+  try {
+    //* 3-find listing by id
+    const listing = await Listing.findById(listingId);
+    if (!listing) {
+      throw new ApiError(404, "Listing not found");
+    }
+
+    if (listing.owner.toString() !== userId.toString()) {
+      throw new ApiError(403, "You are not authorized to update this listing");
+    }
+
+    if (listing.isSold) {
+      throw new ApiError(403, "You cannot Update a sold listing");
+    }
+
+    //* 4-Find local path of images
+    const localImagesPath = [];
+    for (const image of images) {
+      const { path } = image;
+      localImagesPath.push(path);
+    }
+    //add more image to listing less than 6
+    if (listing.images.length >= 5) {
+      //if images are more than 5 we will delete the image stored in temp folder
+      fs.unlinkSync(localImagesPath[0]);
+      throw new ApiError(400, "You cannot add more than 5 images");
+    }
+    //!IMP create different bulk image uploader method in cloudinary utility
+    const imageUploaded = await bulkUploadOnCloudinary({
+      localImagesPath,
+    });
+    //* 5-Update DB Object
+
+    await Listing.updateOne(
+      { _id: listingId },
+      {
+        $push: { images: imageUploaded },
+      },
+      { new: true, runValidators: true }
+    );
+    // send updated data to client
+    const data = await Listing.findById(listingId);
+    //* 6-Send response
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, data, "Image uploaded successfully"));
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
+
+//TODO: Delete Listing Images
+
+const deleteListingImages = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const listingId = req.params.id;
+  const publicId = req.params.publicId;
+  try {
+    const listing = await Listing.findById(listingId);
+    if (!listing) {
+      throw new ApiError(404, "Listing not found");
+    }
+    if (listing.owner.toString() !== userId.toString()) {
+      throw new ApiError(403, "You are not authorized to update this listing");
+    }
+    if (listing.isSold) {
+      throw new ApiError(403, "You cannot Update a sold listing");
+    }
+    if (listing.images.length < 1) {
+      throw new ApiError(400, "There are no Images in this listing");
+    }
+    // find image from db by public id and delete it
+    await Listing.updateOne(
+      { _id: listingId },
+      { $pull: { images: { public_id: publicId } } }
+    );
+
+    await cloudinary.uploader.destroy(publicId);
+    const data = await Listing.findById(listingId);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, data, "Image deleted Successfully"));
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
+
+export {
+  createListing,
+  deleteListing,
+  updateListing,
+  addListingImages,
+  deleteListingImages,
+};
