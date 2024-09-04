@@ -30,6 +30,7 @@ const listingSchema = new Schema(
       type: Number,
       required: true,
       min: 0,
+      set: (v) => parseInt(v),
     },
     images: [
       {
@@ -47,12 +48,13 @@ const listingSchema = new Schema(
       type: Number,
       required: true,
       min: 1,
+      set: (v) => parseInt(v),
     },
-    Categories: [
+    categories: [
       {
-        type: ObjectId, // we will send only names of categories with product
+        type: ObjectId,
         ref: "Category",
-        required: true,
+        required: [true, "Category is required"],
       },
     ],
     amenities: [{ type: String, required: true, maxlength: 60 }],

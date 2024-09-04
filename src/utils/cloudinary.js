@@ -65,43 +65,44 @@ const bulkUploadOnCloudinary = async ({
   publicIds = null,
 }) => {
   try {
-    if (!localImagesPath) return null;
-    let cloudinaryResponse = [];
-    for (const imagepath of localImagesPath) {
-      const response = await cloudinary.uploader.upload(imagepath, {
-        resource_type: "auto",
-        transformation: [
-          {
-            fetch_format: "auto",
-            width: 1000,
-            crop: "scale",
-            quality: "auto",
-            fetch_format: "auto",
-          },
-        ],
-      });
+    if (localImagesPath) {
+      let cloudinaryResponse = [];
 
-      cloudinaryResponse.push({
-        url: response.url,
-        public_id: response.public_id,
+      for (const imagepath of localImagesPath) {
+        const response = await cloudinary.uploader.upload(imagepath, {
+          resource_type: "auto",
+          transformation: [
+            {
+              fetch_format: "auto",
+              width: 1000,
+              crop: "scale",
+              quality: "auto",
+              fetch_format: "auto",
+            },
+          ],
+        });
+
+        cloudinaryResponse.push({
+          url: response.url,
+          public_id: response.public_id,
+        });
+      }
+      //File has Uploaded Successfully
+      localImagesPath?.map((res) => {
+        fs.unlinkSync(res);
       });
+      return cloudinaryResponse;
+    } else if (publicIds) {
+      //! we are receiving public id if we want to delete old avatar.
+      let result = [];
+      publicIds.map(async (res) => {
+        const del = await cloudinary.uploader.destroy(res);
+        result.push(del);
+      });
+      return result;
+    } else {
+      return null;
     }
-
-    //File has Uploaded Successfully
-    localImagesPath?.map((res) => {
-      fs.unlinkSync(res);
-    });
-
-    //! we are receiving public id if we want to delete old avatar.
-    if (publicIds) {
-      publicIds.map(async (res, i, err) => {
-        await cloudinary.uploader.destroy(res);
-        if (err) {
-          throw new ApiError(err.statusCode, err.message);
-        }
-      });
-    }
-    return cloudinaryResponse;
   } catch (error) {
     console.log("Error While Uploading to Cloudinary", error);
 

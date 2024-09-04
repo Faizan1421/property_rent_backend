@@ -113,7 +113,7 @@ const registerUser = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, createdUser, "User Registered Successfully"));
   } catch (error) {
-    throw new ApiError(error.status, error.message);
+    throw new ApiError(error.statusCode, error.message);
   }
 });
 
@@ -304,7 +304,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    throw new ApiError(401, "Invalid refresh token");
+    throw new ApiError(error.statusCode, error.message);
   }
 });
 
@@ -549,7 +549,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    throw new ApiError(error.status, error.message);
+    throw new ApiError(error.statusCode, error.message);
   }
 });
 
@@ -585,7 +585,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     return res.status(200).json(new ApiResponse(200, {}, "Token is Valid"));
   } catch (error) {
-    throw new ApiError(error.status, error.message);
+    throw new ApiError(error.statusCode, error.message);
   }
 });
 
@@ -637,7 +637,7 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, {}, "Your password has been updated"));
   } catch (error) {
-    throw new ApiError(error.status, error.message);
+    throw new ApiError(error.statusCode, error.message);
   }
 });
 
@@ -676,7 +676,7 @@ const becomeSeller = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    throw new ApiError(error.status, error.message);
+    throw new ApiError(error.statusCode, error.message);
   }
 });
 

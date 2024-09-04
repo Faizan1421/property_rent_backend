@@ -63,7 +63,7 @@ const lockOut = asyncHandler(async (req, _, next) => {
     req.user = user;
     next();
   } catch (error) {
-    throw new ApiError(error.status, error.message);
+    throw new ApiError(error.statusCode, error.message);
   }
 });
 export { lockOut };
