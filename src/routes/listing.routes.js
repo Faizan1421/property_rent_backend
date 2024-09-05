@@ -4,6 +4,8 @@ import {
   createListing,
   deleteListing,
   deleteListingImages,
+  getAllListings,
+  getListingById,
   updateListing,
 } from "../controllers/listing.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -18,16 +20,12 @@ router
     upload.array("listingImages", 5),
     createListing
   );
-router
-  .route("/delete-listing/:id")
-  .delete(verifyJWT, checkRole("seller"), deleteListing);
+router.route("/:id").delete(verifyJWT, checkRole("seller"), deleteListing);
+
+router.route("/:id").patch(verifyJWT, checkRole("seller"), updateListing);
 
 router
-  .route("/update-listing/:id")
-  .patch(verifyJWT, checkRole("seller"), updateListing);
-
-router
-  .route("/update-listing/:id/images")
+  .route("/:id/images")
   .patch(
     verifyJWT,
     checkRole("seller"),
@@ -36,8 +34,12 @@ router
   );
 
 router
-  .route("/update-listing/:id/images/:publicId")
+  .route("/:id/images/:publicId")
   .delete(verifyJWT, checkRole("seller"), deleteListingImages);
+
+router.route("/:id").get(getListingById);
+
+router.route("/").get(getAllListings);
 export default router;
 
 //!NOTE: we receive images from frontend with name like "listingImages" set in multer middleware

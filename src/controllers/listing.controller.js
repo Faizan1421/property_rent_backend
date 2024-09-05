@@ -253,22 +253,24 @@ const addListingImages = asyncHandler(async (req, res) => {
     const imageUploaded = await bulkUploadOnCloudinary({
       localImagesPath,
     });
-    //* 5-Update DB Object
 
-    await Listing.updateOne(
+    //* 5-Update DB Object
+    //findOneAndUpdate returns the updated document (if { new: true } is specified),
+    // whereas updateOne only performs the update without returning the document.
+    const updatedListing = await Listing.findOneAndUpdate(
       { _id: listingId },
-      {
-        $push: { images: imageUploaded },
-      },
+      { $push: { images: imageUploaded } },
       { new: true, runValidators: true }
     );
     // send updated data to client
-    const data = await Listing.findById(listingId);
+
     //* 6-Send response
 
     return res
       .status(200)
-      .json(new ApiResponse(200, data, "Image uploaded successfully"));
+      .json(
+        new ApiResponse(200, updatedListing, "Image uploaded successfully")
+      );
   } catch (error) {
     throw new ApiError(error.statusCode, error.message);
   }
@@ -295,16 +297,62 @@ const deleteListingImages = asyncHandler(async (req, res) => {
       throw new ApiError(400, "There are no Images in this listing");
     }
     // find image from db by public id and delete it
-    await Listing.updateOne(
+    const updatedListing = await Listing.findOneAndUpdate(
       { _id: listingId },
-      { $pull: { images: { public_id: publicId } } }
+      { $pull: { images: { public_id: publicId } } },
+      { new: true, runValidators: true }
     );
 
     await cloudinary.uploader.destroy(publicId);
-    const data = await Listing.findById(listingId);
     return res
       .status(200)
-      .json(new ApiResponse(200, data, "Image deleted Successfully"));
+      .json(new ApiResponse(200, updatedListing, "Image deleted Successfully"));
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
+
+//TODO: Get listing by id
+const getListingById = asyncHandler(async (req, res) => {
+  const listingId = req.params.id;
+  try {
+    //* 1-check if listing id is valid/objectid  or not
+    const checkID = mongoose.Types.ObjectId.isValid(listingId);
+    if (!checkID) {
+      throw new ApiError(400, "Invalid listing ID");
+    }
+
+    const listing = await Listing.findById(listingId)
+      .populate("owner", "_id username fullName avatar")
+      .populate("categories");
+    if (!listing) {
+      throw new ApiError(404, "Listing not found");
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, listing, "Listing fetched successfully"));
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
+
+//TODO: Get all Listings
+//agrigators
+//send sellers with listing and more
+
+//*!Note
+//TODO: use aggregators for paginations and filteration
+
+const getAllListings = asyncHandler(async (_, res) => {
+  try {
+    const listings = await Listing.find({ isPublished: true })
+      .populate("owner", "_id username fullName avatar")
+      .populate("categories");
+
+    if (!listings) {
+      throw new ApiError(404, "No listings found");
+    }
+    return res.status(200).json(new ApiResponse(200, listings, "success"));
   } catch (error) {
     throw new ApiError(error.statusCode, error.message);
   }
@@ -316,4 +364,6 @@ export {
   updateListing,
   addListingImages,
   deleteListingImages,
+  getListingById,
+  getAllListings,
 };
