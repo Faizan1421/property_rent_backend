@@ -1,7 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
-import { ApiError } from "./ApiError.js";
 
 dotenv.config();
 // Configuration
@@ -60,10 +59,7 @@ const uploadOnCloudinary = async (
   }
 };
 
-const bulkUploadOnCloudinary = async ({
-  localImagesPath,
-  publicIds = null,
-}) => {
+const bulkUploadOnCloudinary = async ({ localImagesPath }) => {
   try {
     if (localImagesPath) {
       let cloudinaryResponse = [];
@@ -92,15 +88,8 @@ const bulkUploadOnCloudinary = async ({
         fs.unlinkSync(res);
       });
       return cloudinaryResponse;
-    } else if (publicIds) {
-      //! we are receiving public id if we want to delete old avatar.
-      let result = [];
-      publicIds.map(async (res) => {
-        const del = await cloudinary.uploader.destroy(res);
-        result.push(del);
-      });
-      return result;
     } else {
+      console.log(publicIds);
       return null;
     }
   } catch (error) {
@@ -113,4 +102,17 @@ const bulkUploadOnCloudinary = async ({
     return null;
   }
 };
-export { uploadOnCloudinary, bulkUploadOnCloudinary };
+
+const deleteBulkOnCloudinary = async (publicIds) => {
+  let result;
+  try {
+    for (const publicId of publicIds) {
+      result = await cloudinary.uploader.destroy(publicId);
+    }
+    return result;
+  } catch (error) {
+    console.log("Error While Deleting from Cloudinary", error);
+    return null;
+  }
+};
+export { uploadOnCloudinary, bulkUploadOnCloudinary, deleteBulkOnCloudinary };

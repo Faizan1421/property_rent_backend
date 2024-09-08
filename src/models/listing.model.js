@@ -71,6 +71,86 @@ const listingSchema = new Schema(
       ref: "User",
       required: true,
     },
+    location: {
+      address: {
+        type: String,
+        required: [true, " address is required"],
+        lowercase: true,
+        trim: true,
+        minlength: [5, "Address must be at least 5 characters"],
+        maxlength: [100, "Address must be at most 100 characters"],
+      },
+      city: {
+        type: String,
+        required: [true, "City is required"],
+        lowercase: true,
+        trim: true,
+        enum: [
+          "daultala",
+          "rawalpindi",
+          "bewal",
+          "jehlum",
+          "rawat",
+          "gujar khan",
+          "mandra",
+        ],
+      },
+      state: {
+        type: String,
+        required: [true, "State is required"],
+        lowercase: true,
+        trim: true,
+        // enum: [
+        //   "punjab",
+        //   "sindh",
+        //   "kp",
+        //   "balouchistan",
+        //   "islamabad",
+        //   "kashmir",
+        //   "gb",
+        // ],
+        validate: {
+          validator: (value) => {
+            if (
+              ![
+                "punjab",
+                "sindh",
+                "kp",
+                "balouchistan",
+                "islamabad",
+                "kashmir",
+                "gb",
+              ].includes(value)
+            ) {
+              return false;
+            }
+            return true;
+          },
+          message: "You cannot use state {VALUE}",
+        },
+      },
+      zipCode: {
+        type: String,
+        required: [true, "Zip code is required"],
+        minlength: [5, "Zip code must be Valid"],
+        maxlength: [5, "Zip code must be Valid"],
+      },
+      country: {
+        type: String,
+        required: [true, "Country is required"],
+        lowercase: true,
+        // enum: ["pakistan"],
+        validate: {
+          validator: (value) => {
+            if (!["pakistan"].includes(value)) {
+              return false;
+            }
+            return true;
+          },
+          message: "You cannot use country {VALUE}",
+        },
+      },
+    },
   },
   { timestamps: true }
 );

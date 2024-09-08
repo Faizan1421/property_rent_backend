@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js '",
-    "pretty": "npx prettier . --write"
+    "pretty": "npx prettier . --write "
   },
   "keywords": [],
   "author": "",

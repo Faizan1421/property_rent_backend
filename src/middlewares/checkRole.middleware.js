@@ -20,7 +20,7 @@ const checkRole = (...roles) => {
       //call Next() to go on next middleware if any or controller.
       next();
     } catch (error) {
-      throw new ApiError(error.status, error.message);
+      throw new ApiError(error.statusCode, error.message);
     }
   });
 };

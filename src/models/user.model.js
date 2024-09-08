@@ -7,7 +7,7 @@ const userSchema = new Schema(
   {
     username: {
       type: String,
-      required: true,
+      required: [true, "Username is required"],
       unique: true,
       lowercase: true,
       trim: true,
@@ -15,14 +15,14 @@ const userSchema = new Schema(
     },
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
     },
     fullName: {
       type: String,
-      required: true,
+      required: [true, "Full Name is required"],
       trim: true,
       lowercase: true,
     },
@@ -30,7 +30,7 @@ const userSchema = new Schema(
       type: String,
       lowercase: true,
       enum: ["male", "female", "other"],
-      required: true,
+      required: [true, "Gender is required"],
     },
     avatar: {
       type: String, //cloudinary url
@@ -38,6 +38,7 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
+      minlength: [6, "Password must be at least 6 characters"],
     },
     role: {
       type: String,
@@ -50,8 +51,7 @@ const userSchema = new Schema(
     },
     phone: {
       type: String,
-      required: true,
-      unique: true,
+      required: [true, "Phone number is required"],
       validate: {
         validator: function (v) {
           return /^\+92\d{10}$/.test(v); // Pakistani phone number format validation

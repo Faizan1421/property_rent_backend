@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { cookiesOptions } from "../constants.js";
 import { config } from "../config.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import mongoose from "mongoose";
 
 //TODO: Generate Access and Refresh Tokens
 
@@ -49,19 +50,21 @@ const registerUser = asyncHandler(async (req, res) => {
   email, fullName, gender, password, phone) are not empty.Javascript some method is used to return boolean value.
   Here's a breakdown of what it does: */
 
-    if (
-      [username, email, fullName, gender, password, phone].some(
-        (field) => field?.trim() === undefined || ""
-      )
-    ) {
-      throw new ApiError(400, "All Fields are Required");
-    }
+    // if (
+    //   [username, email, fullName, gender, password, phone].some(
+    //     (field) => field?.trim() === undefined || ""
+    //   )
+    // ) {
+    //   throw new ApiError(400, "All Fields are Required");
+    // }
 
     //* 3-Check If User Already Exists: username,email
 
     const existedUser = await User.findOne({
-      $or: [{ username }, { email }],
+      $or: [{ username: username?.replace(/ /g, "") }, { email }],
     });
+    // console.log(existedUser)
+
     if (existedUser) {
       throw new ApiError(
         409,
@@ -78,19 +81,19 @@ const registerUser = asyncHandler(async (req, res) => {
     //* 5-Create User Object by User Model - Create Entry in DB
 
     const user = await User.create({
-      username: username.replace(/ /g, ""), // replace method will remove spaces from inside string.
+      username: username?.replace(/ /g, ""), // replace method will remove spaces from inside string.
       email,
       fullName,
       gender,
       password,
       phone,
     });
+    console.log(user);
     if (!user) {
       throw new ApiError(400, "somme thing went wrong....");
     }
 
     //* 6-Upload to Cloudinary - Avatar/Image --IMP use it here because it doesnot delete image on cloudinary if there is an validation error
-
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     user.avatar = avatar?.url || "";
     await user.save({ validateBeforeSave: true });
@@ -113,7 +116,16 @@ const registerUser = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, createdUser, "User Registered Successfully"));
   } catch (error) {
-    throw new ApiError(error.statusCode, error.message);
+    //Best way to handle builtin validation errors
+    if (error instanceof mongoose.Error.ValidationError) {
+      const errorMessages = Object.keys(error.errors).map(
+        (field) => error.errors[field].message
+      );
+      throw new ApiError(400, errorMessages[0]);
+    } else {
+      console.log("other error:", error.message);
+      throw new ApiError(error.statusCode, error.message);
+    }
   }
 });
 
@@ -216,25 +228,29 @@ const LogoutUser = asyncHandler(async (req, res) => {
 
   //* 2-Delete Refresh Token from User Database.
 
-  await User.findByIdAndUpdate(
-    id,
-    {
-      $unset: {
-        refreshToken: 1, //This Removes Field from Document
+  try {
+    await User.findByIdAndUpdate(
+      id,
+      {
+        $unset: {
+          refreshToken: 1, //This Removes Field from Document
+        },
       },
-    },
-    {
-      new: true,
-    }
-  );
+      {
+        new: true,
+      }
+    );
 
-  //* 3-Send Response
+    //* 3-Send Response
 
-  return res
-    .status(200)
-    .clearCookie("accessToken", cookiesOptions)
-    .clearCookie("refreshToken", cookiesOptions)
-    .json(new ApiResponse(200, {}, "User Logged out Successfully"));
+    return res
+      .status(200)
+      .clearCookie("accessToken", cookiesOptions)
+      .clearCookie("refreshToken", cookiesOptions)
+      .json(new ApiResponse(200, {}, "User Logged out Successfully"));
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
 });
 
 // TODO: Generate new Access token & Refresh Token upon request from frontend side.
@@ -322,27 +338,37 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
   const { oldPassword, newPassword } = req.body;
 
-  //* 2- get user details from database by user _id comming from verifyJWT middleware
+  try {
+    //* 2- get user details from database by user _id comming from verifyJWT middleware
+    const user = await User.findById(req.user?._id);
 
-  const user = await User.findById(req.user?._id);
+    //* 3- Match Old password provided by user to password saved in database of that user
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
-  //* 3- Match Old password provided by user to password saved in database of that user
+    if (!isPasswordCorrect) {
+      throw new ApiError(400, "invalid Old Password");
+    }
+    //* 4- set New User password and save doc in DB
 
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: true });
 
-  if (!isPasswordCorrect) {
-    throw new ApiError(400, "invalid Old Password");
+    //* 5- Send Response
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Password changed successfully"));
+  } catch (error) {
+    //Best way to handle builtin validation errors
+    if (error instanceof mongoose.Error.ValidationError) {
+      const errorMessages = Object.keys(error.errors).map(
+        (field) => error.errors[field].message
+      );
+      throw new ApiError(400, errorMessages[0]);
+    } else {
+      throw new ApiError(error.statusCode, error.message);
+    }
   }
-  //* 4- set New User password and save doc in DB
-
-  user.password = newPassword;
-  await user.save({ validateBeforeSave: false });
-
-  //* 5- Send Response
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
 //TODO: Get Current User Details
@@ -367,59 +393,83 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
   //* 1- Get Data from req.body
   // ...rest will give us an object containing all/any keys in req.body
-  const { ...rest } = req.body;
+  const { email, username, ...rest } = req.body;
   // console.log(rest);
-  //! Important:
-  //* 2- check if req has keys to update secure data like password, refreshtoken,role etc than throw Error.
-  const restrictedKeys = [
-    "_id",
-    "role",
-    "refreshToken",
-    "password",
-    "avatar",
-    "isVerified",
-    "createdAt",
-    "updatedAt",
-    "resetPasswordToken",
-    "resetPasswordExpires",
-    "passwordResetAttempts",
-    "passwordResetLockUntil",
-  ];
-  // this find method will return first key found from an restricted keys Array
-  //if no restricted key found than it will return undefined value.
-  // find Method returns only first value if found in array.
+  try {
+    //! Important:
+    //* 2- check if req has keys to update secure data like password, refreshtoken,role etc than throw Error.
+    const restrictedKeys = [
+      "_id",
+      "role",
+      "refreshToken",
+      "password",
+      "avatar",
+      "isVerified",
+      "createdAt",
+      "updatedAt",
+      "resetPasswordToken",
+      "resetPasswordExpires",
+      "passwordResetAttempts",
+      "passwordResetLockUntil",
+    ];
+    // this find method will return first key found from an restricted keys Array
+    //if no restricted key found than it will return undefined value.
+    // find Method returns only first value if found in array.
 
-  const checkRestrictedKeys = restrictedKeys.find((key) => {
-    // The in operator returns true if the specified property is in the specified object.
-    // when true it will stop loop and return that key which is found in rest object.
-    return key in rest;
-  });
+    const checkRestrictedKeys = restrictedKeys.find((key) => {
+      // The in operator returns true if the specified property is in the specified object.
+      // when true it will stop loop and return that key which is found in rest object.
+      return key in rest;
+    });
 
-  // console.log(checkRestrictedKeys);
-  // if any restricted key is found from find method we will throw an error.
+    // console.log(checkRestrictedKeys);
+    // if any restricted key is found from find method we will throw an error.
 
-  if (checkRestrictedKeys) {
-    throw new ApiError(400, "You are Not Authorized to change secure data");
-  }
+    if (checkRestrictedKeys) {
+      throw new ApiError(400, "You are Not Authorized to change secure data");
+    }
 
-  //* 3- Updating user data in DB
+    if (email || username) {
+      const checkDuplicate = await User.findOne({
+        $or: [{ username }, { email }],
+      });
+      if (checkDuplicate) {
+        throw new ApiError(400, "Email or Username already exists");
+      }
+    }
+    //* 3- Updating user data in DB
 
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        ...rest,
+    const user = await User.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          email: email || req.user.email,
+          username: username || req.user.username,
+          ...rest,
+        },
       },
-    },
-    { new: true, runValidators: true } //new:true will send updated state od doc, runvalidators:true will triger vilidator set on models before updating.
-  ).select(
-    "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
-  );
-
-  //* 4- send Response
-  return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"));
+      { new: true, runValidators: true } //new:true will send updated state od doc, runvalidators:true will triger vilidator set on models before updating.
+    ).select(
+      "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
+    );
+    //runValidators runs the validators on the document and throws a ValidationError if any of the validation rules are not met,
+    //while validateBeforeSave allows you to validate the document and modify it before it is saved.
+    //* 4- send Response
+    return res
+      .status(200)
+      .json(new ApiResponse(200, user, "Account details updated successfully"));
+  } catch (error) {
+    //Best way to handle builtin validation errors
+    if (error instanceof mongoose.Error.ValidationError) {
+      const errorMessages = Object.keys(error.errors).map(
+        (field) => error.errors[field].message
+      );
+      throw new ApiError(400, errorMessages[0]);
+    } else {
+      console.log("other error:", error.message);
+      throw new ApiError(error.statusCode, error.message);
+    }
+  }
 });
 
 //TODO: Update User Avatar
@@ -444,44 +494,57 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
   // destructure req.user and get _id
   const { _id } = req.user;
-  // we will fetch avatar from user doc after destructuring. because we are receive id and avatar in obj
-  const { avatar } = await User.findOne({ _id }, "avatar");
-  // console.log(avatar);
+  try {
+    // we will fetch avatar from user doc after destructuring. because we are receive id and avatar in obj
+    const { avatar } = await User.findOne({ _id }, "avatar");
+    // console.log(avatar);
 
-  //* 3- split url and get public id from url
+    //* 3- split url and get public id from url
 
-  const publicIdOfOldAvatar = await avatar?.split("/").pop().split(".")[0];
+    const publicIdOfOldAvatar = await avatar?.split("/").pop().split(".")[0];
 
-  //* 4- call uploadoncloudinary method and send args with avatar local path and public id of old avatar if any.
+    //* 4- call uploadoncloudinary method and send args with avatar local path and public id of old avatar if any.
 
-  const newAvatar = await uploadOnCloudinary(
-    avatarLocalPath,
-    publicIdOfOldAvatar
-  );
-  const newAvatarUrl = newAvatar?.url;
-  if (!newAvatarUrl) {
-    throw new ApiError(400, "Error while uploading on avatar");
-  }
+    const newAvatar = await uploadOnCloudinary(
+      avatarLocalPath,
+      publicIdOfOldAvatar
+    );
+    const newAvatarUrl = newAvatar?.url;
+    if (!newAvatarUrl) {
+      throw new ApiError(400, "Error while uploading on avatar");
+    }
 
-  //* 5- save new avatar url to User Doc and set New to true for updated data to be sent in response
+    //* 5- save new avatar url to User Doc and set New to true for updated data to be sent in response
 
-  const user = await User.findByIdAndUpdate(
-    _id,
-    {
-      $set: {
-        avatar: newAvatarUrl,
+    const user = await User.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          avatar: newAvatarUrl,
+        },
       },
-    },
-    { new: true }
-  ).select(
-    "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
-  );
+      { new: true }
+    ).select(
+      "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
+    );
 
-  //* 6- Send Response
+    //* 6- Send Response
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Avatar Updated Successfully"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, user, "Avatar Updated Successfully"));
+  } catch (error) {
+    //Best way to handle builtin validation errors
+    if (error instanceof mongoose.Error.ValidationError) {
+      const errorMessages = Object.keys(error.errors).map(
+        (field) => error.errors[field].message
+      );
+      throw new ApiError(400, errorMessages[0]);
+    } else {
+      console.log("other error:", error.message);
+      throw new ApiError(error.statusCode, error.message);
+    }
+  }
 });
 
 //TODO: Forget Password Recovery- For sending password reset email to user registered email.
@@ -501,11 +564,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
   // if (!email) {
   //   throw new ApiError(400, "email is required for password Recovery");
   // }
+  //* 1-Get User from req.user which we had set in middleware lockout
+  const user = req.user;
 
   try {
-    //* 1-Get User from req.user which we had set in middleware lockout
-    const user = req.user;
-
     //- find user from DB by using Email
     //! we have implemented in middleware-dont need here.
     // const user = await User.findOne({ email }); /
@@ -630,14 +692,23 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
     //!Imp Reset passwordResetAttempts and passwordResetLockUntil if i have configured middleware of lockout on forgot password.
     user.passwordResetAttempts = 0;
     user.passwordResetLockUntil = null;
-    await user.save({ validateBeforeSave: false });
+    await user.save({ validateBeforeSave: true });
 
     //* 7- Send Response
     return res
       .status(200)
       .json(new ApiResponse(200, {}, "Your password has been updated"));
   } catch (error) {
-    throw new ApiError(error.statusCode, error.message);
+    //Best way to handle builtin validation errors
+    if (error instanceof mongoose.Error.ValidationError) {
+      const errorMessages = Object.keys(error.errors).map(
+        (field) => error.errors[field].message
+      );
+      throw new ApiError(400, errorMessages[0]);
+    } else {
+      console.log("other error:", error.message);
+      throw new ApiError(error.statusCode, error.message);
+    }
   }
 });
 

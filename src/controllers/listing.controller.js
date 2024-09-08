@@ -3,7 +3,10 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Listing } from "../models/listing.model.js";
 import { Category } from "../models/category.model.js";
-import { bulkUploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  bulkUploadOnCloudinary,
+  deleteBulkOnCloudinary,
+} from "../utils/cloudinary.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import fs from "fs";
@@ -28,6 +31,7 @@ const createListing = asyncHandler(async (req, res) => {
       rooms,
       categories,
       amenities,
+      location,
     } = req.body;
 
     //* 2-Get Images from req.files
@@ -53,23 +57,28 @@ const createListing = asyncHandler(async (req, res) => {
       rooms,
       categories: getCategories || [],
       amenities,
+      location,
       owner: user._id,
     });
     //* 4-Upload Images on Cloudinary
 
-    //!IMP create different bulk image uploader method in cloudinary utility
+    //* created different bulk image uploader method in cloudinary utility
     const imageUploaded = await bulkUploadOnCloudinary({
       localImagesPath,
     });
     // console.log(imageUploaded);
-    createdListing.images = imageUploaded;
-    const data = await createdListing.save({ new: true });
+    createdListing.images = imageUploaded ? imageUploaded : [];
+    await createdListing.save({ new: true });
+    const data = await createdListing.populate({
+      path: "owner",
+      select: "username email fullName",
+    });
 
     //* 5- Return Response
 
     return res
       .status(201)
-      .json(new ApiResponse(201, data, "Product Added Successfully"));
+      .json(new ApiResponse(201, data, "Listing Added Successfully"));
     // Delete images on cloudinary
     // const publicIds = ["elzlgsuk7klhtzreyeqx", "sjh6neyiu9dncsdgfide"];
     //  const imageDeleted = await bulkUploadOnCloudinary({
@@ -77,7 +86,16 @@ const createListing = asyncHandler(async (req, res) => {
     // });
     // console.log(imageDeleted)
   } catch (error) {
-    throw new ApiError(error.statusCode, error.message);
+    //Best way to handle builtin validation errors
+    if (error instanceof mongoose.Error.ValidationError) {
+      const errorMessages = Object.keys(error.errors).map(
+        (field) => error.errors[field].message
+      );
+      throw new ApiError(400, errorMessages[errorMessages.length - 1]);
+    } else {
+      console.log("Other error:", error.message);
+      throw new ApiError(error.statusCode, error.message);
+    }
   }
 });
 
@@ -117,7 +135,20 @@ const deleteListing = asyncHandler(async (req, res) => {
       throw new ApiError(403, "You cannot delete a sold listing");
     }
     //* 6-delete listing
-    await Listing.deleteOne({ _id: listingId });
+    const resultDeleted = await Listing.deleteOne({ _id: listingId });
+    // console.log(resultDeleted)
+    if (resultDeleted.deletedCount === 0) {
+      throw new ApiError(500, "Error deleting listing");
+    }
+    //!Note : Delete images on cloudinary
+    if (resultDeleted.deletedCount > 0 && listing.images.length > 0) {
+      const publicIds = listing.images.map((image) => image.public_id);
+      // one of the for loop for async operation while async doesnot work with map
+      const result = await deleteBulkOnCloudinary(publicIds);
+      if (!result) {
+        throw new ApiError(500, "Error deleting images on cloudinary");
+      }
+    }
 
     //* 7-send response
     return res
@@ -142,7 +173,7 @@ const updateListing = asyncHandler(async (req, res) => {
   //* 2-Get userid from req set by middleware verifyjwt
   const userId = req.user._id;
   //* 3-Get data from req.body
-  const { categories, isSold, ...rest } = req.body;
+  const { location, categories, isSold, ...rest } = req.body;
 
   //get categories from database because its a refernce to store in listing
   const getCategories = await Category.find({ name: { $in: categories } });
@@ -187,7 +218,11 @@ const updateListing = asyncHandler(async (req, res) => {
       },
       { new: true, runValidators: true }
     );
-
+    //*!Note we have to take care of old data and new data in location object
+    if (location) {
+      const { ...remaining } = location;
+      updatedListing.location = { ...updatedListing.location, ...remaining };
+    }
     if (categories) {
       updatedListing.categories = getCategories;
     }
@@ -195,7 +230,7 @@ const updateListing = asyncHandler(async (req, res) => {
     if (isSold && listing.isSold === false) {
       updatedListing.isSold = true;
     }
-    await updatedListing.save({ new: true, validateBeforeSave: false });
+    await updatedListing.save({ new: true, validateBeforeSave: true });
 
     //* 6-send Response
     return res
@@ -204,7 +239,16 @@ const updateListing = asyncHandler(async (req, res) => {
         new ApiResponse(200, updatedListing, "Listing updated successfully")
       );
   } catch (error) {
-    throw new ApiError(error.statusCode, error.message);
+    //Best way to handle builtin validation errors
+    if (error instanceof mongoose.Error.ValidationError) {
+      const errorMessages = Object.keys(error.errors).map(
+        (field) => error.errors[field].message
+      );
+      throw new ApiError(400, errorMessages[0]);
+    } else {
+      console.log("other error:", error.message);
+      throw new ApiError(error.statusCode, error.message);
+    }
   }
 });
 
@@ -219,6 +263,10 @@ const updateListing = asyncHandler(async (req, res) => {
 const addListingImages = asyncHandler(async (req, res) => {
   //* 1-Get Images from req.files
   const images = req.files;
+  if (!images) {
+    throw new ApiError(400, "please Select a single Image");
+  }
+
   //* 2-get user from req.user which was set by verifyjwt middleware
   const userId = req.user._id;
   const listingId = req.params.id;
@@ -337,11 +385,12 @@ const getListingById = asyncHandler(async (req, res) => {
 });
 
 //TODO: Get all Listings
-//agrigators
-//send sellers with listing and more
 
 //*!Note
-//TODO: use aggregators for paginations and filteration
+//TODO: add location in listing create and also update model of listing----(working)
+//TODO: create model of comments and refernce with listings
+//TODO: use aggregators for paginations and filteration- implement rating and comments in get all listings
+//TODO: send sellers profile  with listing uploaded by seller and more in get all listings
 
 const getAllListings = asyncHandler(async (_, res) => {
   try {
