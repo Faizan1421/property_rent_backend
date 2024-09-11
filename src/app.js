@@ -31,10 +31,14 @@ app.use(cookieParser());
 // Import Routes
 import userRouter from "./routes/user.routes.js";
 import listingRouter from "./routes/listing.routes.js";
+import commentRouter from "./routes/comment.routes.js";
+import wishlistRouter from "./routes/wishlist.routes.js";
 
 //routes declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/listings", listingRouter);
+app.use("/api/v1/comments", commentRouter);
+app.use("/api/v1/wishlist", wishlistRouter);
 
 // Error Handling Middleware which send error in json.
 //it must be put at the end of all routes and middlewares before export.

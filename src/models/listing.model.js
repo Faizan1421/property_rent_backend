@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 const { ObjectId } = mongoose.Schema;
 const listingSchema = new Schema(
   {
@@ -155,4 +156,5 @@ const listingSchema = new Schema(
   { timestamps: true }
 );
 
+listingSchema.plugin(mongooseAggregatePaginate);
 export const Listing = mongoose.model("Listing", listingSchema);

@@ -37,9 +37,8 @@ router
   .route("/:id/images/:publicId")
   .delete(verifyJWT, checkRole("seller"), deleteListingImages);
 
-router.route("/:id").get(getListingById);
-
-router.route("/").get(getAllListings);
+router.route("/single/:id").get(getListingById);
+router.route("/:category?").get(getAllListings);
 export default router;
 
 //!NOTE: we receive images from frontend with name like "listingImages" set in multer middleware

@@ -10,6 +10,7 @@ import {
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import fs from "fs";
+
 //TODO: Create Listing
 
 const createListing = asyncHandler(async (req, res) => {
@@ -370,15 +371,107 @@ const getListingById = asyncHandler(async (req, res) => {
       throw new ApiError(400, "Invalid listing ID");
     }
 
-    const listing = await Listing.findById(listingId)
-      .populate("owner", "_id username fullName avatar")
-      .populate("categories");
-    if (!listing) {
+    const aggregateListing = await Listing.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(listingId),
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "categories",
+          foreignField: "_id",
+          as: "categories",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+                fullName: 1,
+                avatar: 1,
+              },
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: "$owner",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "comments",
+          localField: "_id",
+          foreignField: "listing",
+          as: "comments",
+          pipeline: [
+            {
+              $project: {
+                content: 1,
+                owner: 1,
+              },
+            },
+
+            {
+              $unwind: {
+                path: "$owner",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      username: 1,
+                      fullName: 1,
+                      avatar: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                content: 1,
+                owner: {
+                  $arrayElemAt: ["$owner", 0],
+                },
+              },
+            },
+            {
+              $limit: 10,
+            },
+          ],
+        },
+      },
+    ]);
+
+    if (aggregateListing.length < 1) {
       throw new ApiError(404, "Listing not found");
     }
     return res
       .status(200)
-      .json(new ApiResponse(200, listing, "Listing fetched successfully"));
+      .json(
+        new ApiResponse(200, aggregateListing, "Listing fetched successfully")
+      );
   } catch (error) {
     throw new ApiError(error.statusCode, error.message);
   }
@@ -392,17 +485,112 @@ const getListingById = asyncHandler(async (req, res) => {
 //TODO: use aggregators for paginations and filteration- implement rating and comments in get all listings
 //TODO: send sellers profile  with listing uploaded by seller and more in get all listings
 
-const getAllListings = asyncHandler(async (_, res) => {
+const getAllListings = asyncHandler(async (req, res) => {
   try {
-    const listings = await Listing.find({ isPublished: true })
-      .populate("owner", "_id username fullName avatar")
-      .populate("categories");
-
-    if (!listings) {
-      throw new ApiError(404, "No listings found");
+    // Retrieve category name from route params
+    const categoryName = req.params?.category?.toLowerCase() || "all";
+    // If the category is not "all", fetch the category details
+    if (categoryName !== "all") {
+      const category = await Category.findOne({
+        name: categoryName?.toString(),
+      });
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
     }
-    return res.status(200).json(new ApiResponse(200, listings, "success"));
+
+    // Conditional match stage for category
+    let categoryMatchStage = {};
+    if (categoryName !== "all") {
+      categoryMatchStage = { "categories.name": categoryName };
+    }
+
+    const aggregateListing = Listing.aggregate([
+      { $match: { isPublished: true } }, // Match published items
+
+      // Lookup categories
+      {
+        $lookup: {
+          from: "categories",
+          localField: "categories",
+          foreignField: "_id",
+          as: "categories",
+        },
+      },
+      { $unwind: "$categories" }, // Unwind to treat each category as an object
+
+      // Match category name if not "all"
+      ...(categoryName !== "all" ? [{ $match: categoryMatchStage }] : []),
+
+      // Lookup owner details
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+          pipeline: [
+            { $project: { _id: 1, username: 1, fullName: 1, avatar: 1 } },
+          ],
+        },
+      },
+      { $unwind: { path: "$owner", preserveNullAndEmptyArrays: true } },
+
+      // Group by product _id to ensure uniqueness
+      {
+        $group: {
+          _id: "$_id",
+          product: { $first: "$$ROOT" },
+        },
+      },
+      { $replaceRoot: { newRoot: "$product" } },
+
+      // Project the required fields
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          highlight: 1,
+          highlightDesc: 1,
+          price: 1,
+          images: 1,
+          rooms: 1,
+          categories: 1,
+          amenities: 1,
+          isPublished: 1,
+          isSold: 1,
+          owner: 1,
+          location: 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+
+    if (!aggregateListing) {
+      throw new ApiError(500, "An Error Ocurred While Fetching Products");
+    }
+
+    // Pagination options from request query params
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 10,
+      sortBy: { createdAt: -1 },
+    };
+
+    // Paginate the aggregation
+    const result = await Listing.aggregatePaginate(aggregateListing, options);
+    if (!result) {
+      throw new ApiError(
+        500,
+        "An Error Ocurred While Fetching Products According to Pagination"
+      );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Listings Fetched Successfully"));
   } catch (error) {
+    console.log(error);
     throw new ApiError(error.statusCode, error.message);
   }
 });
