@@ -86,15 +86,34 @@ const listingSchema = new Schema(
         required: [true, "City is required"],
         lowercase: true,
         trim: true,
-        enum: [
-          "daultala",
-          "rawalpindi",
-          "bewal",
-          "jehlum",
-          "rawat",
-          "gujar khan",
-          "mandra",
-        ],
+        // enum: [
+        //   "daultala",
+        //   "rawalpindi",
+        //   "bewal",
+        //   "jehlum",
+        //   "rawat",
+        //   "gujar khan",
+        //   "mandra",
+        // ],
+        validate: {
+          validator: (value) => {
+            if (
+              ![
+                "daultala",
+                "rawalpindi",
+                "bewal",
+                "jehlum",
+                "rawat",
+                "gujar khan",
+                "mandra",
+              ].includes(value)
+            ) {
+              return false;
+            }
+            return true;
+          },
+          message: "You cannot use City {VALUE}",
+        },
       },
       state: {
         type: String,

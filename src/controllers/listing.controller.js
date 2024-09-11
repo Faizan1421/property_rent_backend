@@ -595,6 +595,113 @@ const getAllListings = asyncHandler(async (req, res) => {
   }
 });
 
+//TODO: Search Listings
+
+const searchListings = asyncHandler(async (req, res) => {
+  try {
+    const { q: query } = req.query;
+   
+    console.log(query);
+    const aggregateListing = Listing.aggregate([
+      {
+        $lookup: {
+          from: "categories",
+          localField: "categories",
+          foreignField: "_id",
+          as: "categories",
+        },
+      },
+      { $unwind: "$categories" },
+      {
+        $match: {
+          isPublished: true,
+          $or: [
+            { title: { $regex: query, $options: "i" } },
+            { description: { $regex: query, $options: "i" } },
+            { highlight: { $regex: query, $options: "i" } },
+            { highlightDesc: { $regex: query, $options: "i" } },
+            { "categories.name": { $regex: query, $options: "i" } },
+            { "location.address": { $regex: query, $options: "i" } },
+            { "location.city": { $regex: query, $options: "i" } },
+            { "location.state": { $regex: query, $options: "i" } },
+            { amenities: { $regex: query, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+          pipeline: [
+            { $project: { _id: 1, username: 1, fullName: 1, avatar: 1 } },
+          ],
+        },
+      },
+      { $unwind: { path: "$owner", preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: "$_id",
+          product: { $first: "$$ROOT" },
+        },
+      },
+      { $replaceRoot: { newRoot: "$product" } },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          highlight: 1,
+          highlightDesc: 1,
+          price: 1,
+          images: 1,
+          rooms: 1,
+          categories: 1,
+          amenities: 1,
+          isPublished: 1,
+          isSold: 1,
+          owner: 2,
+          location: 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+
+    // Pagination options from request query params
+    const options = {
+      page: parseInt(req.query.page) || 1,
+      limit: parseInt(req.query.limit) || 10,
+      sortBy: { createdAt: -1 },
+    };
+
+    // Paginate the aggregation
+    const searchResult = await Listing.aggregatePaginate(
+      aggregateListing,
+      options
+    );
+    if (!searchResult) {
+      throw new ApiError(
+        500,
+        "An Error Ocurred While Fetching Products According to Pagination"
+      );
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          searchResult,
+          searchResult.length > 0
+            ? "Listings Fetched Successfully"
+            : "No  Listings Found with This Keyword, Try to find something else"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
+
 export {
   createListing,
   deleteListing,
@@ -603,4 +710,5 @@ export {
   deleteListingImages,
   getListingById,
   getAllListings,
+  searchListings,
 };
