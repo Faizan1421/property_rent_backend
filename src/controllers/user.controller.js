@@ -142,10 +142,10 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
   //* 1-req body -> data
 
-  const { userEmail, password } = req.body;
+  const { email, username, password } = req.body;
   try {
     //* 2-set username or email in data variable
-    let data = userEmail;
+    let data = email || username;
     if (!data) {
       throw new ApiError(400, "Username or email is Required");
     }
@@ -199,8 +199,8 @@ const loginUser = asyncHandler(async (req, res, next) => {
         )
       );
   } catch (error) {
-    next(error);
-    // throw new ApiError(error.status, error.message);
+    // next(error);
+    throw new ApiError(error.statusCode, error.message);
   }
 });
 

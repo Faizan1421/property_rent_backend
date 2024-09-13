@@ -14,6 +14,10 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     }
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
+    console.log(decodedToken);
+    if (!decodedToken) {
+      throw new ApiError(401, "Token is Expired, Try to Login First");
+    }
     const user = await User.findById(decodedToken?._id).select(
       "-password -refreshToken -resetPasswordToken -resetPasswordExpires -passwordResetAttempts -passwordResetLockUntil"
     );
@@ -26,8 +30,9 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     next();
   } catch (error) {
     if (error instanceof ApiError) {
-      throw error; // Preserve the original status code and message
+      throw new ApiError(error.statusCode, error.message);
     }
-    throw new ApiError(500, error?.message || "Internal Server Error");
+
+    throw new ApiError(400, error?.message);
   }
 });

@@ -31,7 +31,16 @@ const addToWishlist = asyncHandler(async (req, res) => {
       listing: listingId,
       owner: userId,
     }).then((result) => {
-      return Wishlist.populate(result, "owner listing");
+      return Wishlist.populate(result, [
+        {
+          path: "owner",
+          select: " username fullName avatar ",
+        },
+        {
+          path: "listing",
+          select: " title description price images ",
+        },
+      ]);
     });
     if (!wishlistCreated) {
       throw new ApiError(500, "Failed to add to wishlist");
@@ -81,8 +90,7 @@ const getAllWishlists = asyncHandler(async (req, res) => {
     throw new ApiError(400, "User Id is required");
   }
   const wishlists = await Wishlist.find({ owner: userId }).then((result) => {
-    return Wishlist.populate(
-      result,
+    return Wishlist.populate(result, [
       {
         path: "owner",
         select: " username fullName avatar ",
@@ -90,8 +98,8 @@ const getAllWishlists = asyncHandler(async (req, res) => {
       {
         path: "listing",
         select: " title description price images ",
-      }
-    );
+      },
+    ]);
   });
 
   return res

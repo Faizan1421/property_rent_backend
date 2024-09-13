@@ -600,7 +600,7 @@ const getAllListings = asyncHandler(async (req, res) => {
 const searchListings = asyncHandler(async (req, res) => {
   try {
     const { q: query } = req.query;
-   
+
     console.log(query);
     const aggregateListing = Listing.aggregate([
       {
