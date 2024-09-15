@@ -117,51 +117,56 @@ const getSingleConversation = asyncHandler(async (req, res) => {
 const getAllConversations = asyncHandler(async (req, res) => {
   const sender = req.user?._id;
   try {
-       const conversations = await Conversation.aggregate([
-         {
-          $match: {
-            participants: { $all: [sender] },
-          },
-         },
-         {
-          $lookup: {
-            from: "users",
-            localField: "participants",
-            foreignField: "_id",
-            as: "participants",
-            pipeline: [
-              { $project: { _id: 1, username: 1, fullName: 1, avatar: 1 } },
-            ],
-          },
-         },
-         {
-          $lookup: {
-            from: "chats",
-            localField: "_id",
-            foreignField: "conversation",
-            as: "chats",
-            pipeline: [
-              {
-                $lookup: {
-                  from: "users",
-                  localField: "sender",
-                  foreignField: "_id",
-                  as: "sender",
-                  pipeline: [
-                    { $project: { _id: 1, username: 1, fullName: 1, avatar: 1 } },
-                  ],
-                },
+    const conversations = await Conversation.aggregate([
+      {
+        $match: {
+          participants: { $all: [sender] },
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "participants",
+          foreignField: "_id",
+          as: "participants",
+          pipeline: [
+            { $project: { _id: 1, username: 1, fullName: 1, avatar: 1 } },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "chats",
+          localField: "_id",
+          foreignField: "conversation",
+          as: "chats",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "sender",
+                foreignField: "_id",
+                as: "sender",
+                pipeline: [
+                  { $project: { _id: 1, username: 1, fullName: 1, avatar: 1 } },
+                ],
               },
-              {
-                $sort: { createdAt: -1 },
-              }]
-         }}
-       ])
-       return res.status(200).json(new ApiResponse(200, conversations, "Conversation fetched successfully"))
+            },
+            {
+              $sort: { createdAt: -1 },
+            },
+          ],
+        },
+      },
+    ]);
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, conversations, "Conversation fetched successfully")
+      );
   } catch (error) {
     throw new ApiError(error.statusCode, error.message);
   }
-})
+});
 
-
-export { createConversation,getSingleConversation, getAllConversations };
+export { createConversation, getSingleConversation, getAllConversations };

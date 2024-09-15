@@ -12,6 +12,8 @@ import {
   resetPassword,
   resetPasswordNew,
   becomeSeller,
+  getUserProfile,
+  getAllSellers,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -38,4 +40,6 @@ router
 router
   .route("/become-a-seller")
   .post(verifyJWT, checkRole("user"), becomeSeller);
+router.route("/u/:id").get(getUserProfile);
 export default router;
+router.route("/sellers").get(getAllSellers);

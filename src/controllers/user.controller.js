@@ -8,6 +8,7 @@ import { cookiesOptions } from "../constants.js";
 import { config } from "../config.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import mongoose from "mongoose";
+import { Listing } from "../models/listing.model.js";
 
 //TODO: Generate Access and Refresh Tokens
 
@@ -751,11 +752,126 @@ const becomeSeller = asyncHandler(async (req, res) => {
   }
 });
 
+//TODO: implement viewing other seller/user public profile - /api/v1/users/u/:id -> GET request
+
+const getUserProfile = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  try {
+    const userAggregate = await User.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(id),
+
+        },
+      },
+      {
+        $lookup: {
+          from: "listings",
+          localField: "_id",
+          foreignField: "owner",
+          as: "listings",
+          pipeline: [
+            {
+              $match:{
+                isPublished: true
+              }
+            },
+            {
+              $lookup: {
+                from: "categories",
+                localField: "categories",
+                foreignField: "_id",
+                as: "categories",
+              }
+            },
+            
+            {
+              $project: {
+                _id:1,
+                title: 1,
+                description: 1,
+                price:1,
+                rooms:1,
+                categories: 1,
+                amenities:1,
+                isSold:1,
+                images:1,
+                location:1,
+                createdAt:1,
+                 
+              }
+            }
+            ,{
+              $sort:{
+                createdAt: -1
+              }
+            }
+          ]
+        },
+        
+      }
+      ,{
+        $project:{
+          _id: 1,
+          username: 1,
+          email: 1,
+          fullame:1,
+          gender: 1,
+          role: 1,
+          isVerified: 1,
+          phone: 1,
+          avatar: 1,
+          listings: 1,
+          createdAt: 1,
+
+
+        }
+      }
+    ]);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, userAggregate[0], "User fetched successfully"));
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
+
+//TODO: View All Sellers - /api/v1/users/sellers -> GET request
+      const getAllSellers = asyncHandler(async (_, res) => {
+        try {
+          const users = await User.aggregate([
+            {
+              $match: {
+                role: "seller",
+              },
+            },
+            {
+              $project: {
+                _id: 1,
+                username: 1,
+                email: 1,
+                fullame:1,
+                gender: 1,
+                role: 1,
+                isVerified: 1,
+                phone: 1,
+                avatar: 1,
+                createdAt: 1,
+              },
+            },
+          ]);
+          if(users.length === 0){
+            throw new ApiError(200, "No sellers found, Become a seller?");
+          }
+          return res.status(200).json(new ApiResponse(200, users, "Sellers fetched successfully"));
+        } catch (error) {
+          throw new ApiError(error.statusCode, error.message);
+        }
+      })
+
 //TODO:
 // implement history logic (listing viewed by user)
-//implement viewing other seller/user public profile - /api/v1/users/u/:id -> GET request
-//implement viewing seller all listings - /api/v1/users/u/:id/listings   -> GET request
-//implement viewing seller's single listing - /api/v1/users/u/:id/listings/:listing-id -> GET request
 export {
   registerUser,
   loginUser,
@@ -769,4 +885,6 @@ export {
   resetPassword,
   resetPasswordNew,
   becomeSeller,
+  getUserProfile,
+  getAllSellers
 };

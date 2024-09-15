@@ -58,7 +58,7 @@ const deleteMessage = asyncHandler(async (req, res) => {
       throw new ApiError(403, "You are not authorized to delete this message");
     }
     const deletedMessage = await Chat.findByIdAndDelete(messageId);
-    console.log(deletedMessage)
+
     if (deletedMessage.count === 0) {
       throw new ApiError(500, "Failed to delete message");
     }
