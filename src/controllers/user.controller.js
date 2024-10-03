@@ -725,6 +725,7 @@ const becomeSeller = asyncHandler(async (req, res) => {
 
   try {
     //* 2- find user by an _id and change role to seller, and must set runvalidators true for updating field and new to true for getting latest data.
+
     const user = await User.findByIdAndUpdate(
       _id,
       {
@@ -761,7 +762,6 @@ const getUserProfile = asyncHandler(async (req, res) => {
       {
         $match: {
           _id: new mongoose.Types.ObjectId(id),
-
         },
       },
       {
@@ -772,9 +772,9 @@ const getUserProfile = asyncHandler(async (req, res) => {
           as: "listings",
           pipeline: [
             {
-              $match:{
-                isPublished: true
-              }
+              $match: {
+                isPublished: true,
+              },
             },
             {
               $lookup: {
@@ -782,40 +782,38 @@ const getUserProfile = asyncHandler(async (req, res) => {
                 localField: "categories",
                 foreignField: "_id",
                 as: "categories",
-              }
+              },
             },
-            
+
             {
               $project: {
-                _id:1,
+                _id: 1,
                 title: 1,
                 description: 1,
-                price:1,
-                rooms:1,
+                price: 1,
+                rooms: 1,
                 categories: 1,
-                amenities:1,
-                isSold:1,
-                images:1,
-                location:1,
-                createdAt:1,
-                 
-              }
-            }
-            ,{
-              $sort:{
-                createdAt: -1
-              }
-            }
-          ]
+                amenities: 1,
+                isSold: 1,
+                images: 1,
+                location: 1,
+                createdAt: 1,
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            },
+          ],
         },
-        
-      }
-      ,{
-        $project:{
+      },
+      {
+        $project: {
           _id: 1,
           username: 1,
           email: 1,
-          fullame:1,
+          fullame: 1,
           gender: 1,
           role: 1,
           isVerified: 1,
@@ -823,55 +821,89 @@ const getUserProfile = asyncHandler(async (req, res) => {
           avatar: 1,
           listings: 1,
           createdAt: 1,
-
-
-        }
-      }
+        },
+      },
     ]);
 
     return res
       .status(200)
-      .json(new ApiResponse(200, userAggregate[0], "User fetched successfully"));
+      .json(
+        new ApiResponse(200, userAggregate[0], "User fetched successfully")
+      );
   } catch (error) {
     throw new ApiError(error.statusCode, error.message);
   }
 });
 
 //TODO: View All Sellers - /api/v1/users/sellers -> GET request
-      const getAllSellers = asyncHandler(async (_, res) => {
-        try {
-          const users = await User.aggregate([
-            {
-              $match: {
-                role: "seller",
-              },
-            },
-            {
-              $project: {
-                _id: 1,
-                username: 1,
-                email: 1,
-                fullame:1,
-                gender: 1,
-                role: 1,
-                isVerified: 1,
-                phone: 1,
-                avatar: 1,
-                createdAt: 1,
-              },
-            },
-          ]);
-          if(users.length === 0){
-            throw new ApiError(200, "No sellers found, Become a seller?");
-          }
-          return res.status(200).json(new ApiResponse(200, users, "Sellers fetched successfully"));
-        } catch (error) {
-          throw new ApiError(error.statusCode, error.message);
-        }
-      })
+//! used in admin dashboard also
+const getAllSellers = asyncHandler(async (req, res) => {
+  const isAdmin = req.user && req.user.role === "admin";
+  try {
+    const users = await User.aggregate([
+      {
+        $match: {
+          role: isAdmin? { $in: ["seller", "user"] } : "seller",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          email: 1,
+          fullame: 1,
+          gender: 1,
+          role: 1,
+          isVerified: 1,
+          phone: 1,
+          avatar: 1,
+          createdAt: 1,
+        },
+      },
+    ]);
+    if (users.length === 0) {
+      throw new ApiError(200, "No sellers found, Become a seller?");
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, users, "Sellers fetched successfully"));
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
 
-//TODO:
-// implement history logic (listing viewed by user)
+
+//TODO: IMP: ONLY ADMIN-Dashboard ControllersTODO:
+
+//TODO: Verify or Unverify Sellers - /api/v1/dashboard/sellers/:id/verification -> GET request
+
+const verification = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+    try {
+      const user = await User.findById(id);
+      if (!user) {
+        throw new ApiError(404, "User not found");
+      }
+
+      const isAlreadyVerified = user?.isVerified;
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            isVerified: isAlreadyVerified ? false : true,
+          },
+        },
+        { new: true }
+      );
+      return res
+        .status(200)
+        .json(new ApiResponse(200, updatedUser, isAlreadyVerified ? "User verified successfully" : "User unverified successfully"));
+    } catch (error) {
+      throw new ApiError(error.statusCode, error.message);
+    }
+
+})
+
 export {
   registerUser,
   loginUser,
@@ -886,5 +918,6 @@ export {
   resetPasswordNew,
   becomeSeller,
   getUserProfile,
-  getAllSellers
+  getAllSellers,
+  verification
 };

@@ -35,6 +35,7 @@ import commentRouter from "./routes/comment.routes.js";
 import wishlistRouter from "./routes/wishlist.routes.js";
 import chatRouter from "./routes/chat.routes.js";
 import conversationRouter from "./routes/conversation.routes.js";
+import dashboardRouter from "./routes/dashboard.routes.js";
 //routes declaration
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/listings", listingRouter);
@@ -42,6 +43,7 @@ app.use("/api/v1/comments", commentRouter);
 app.use("/api/v1/wishlist", wishlistRouter);
 app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/conversations", conversationRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
 
 // Error Handling Middleware which send error in json.
 //it must be put at the end of all routes and middlewares before export.
