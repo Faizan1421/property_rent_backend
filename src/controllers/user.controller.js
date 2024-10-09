@@ -646,7 +646,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     //* 3-Throw an Error if Token is not matched in any User Doc
 
     if (!user) {
-      throw new ApiError(400, "Password reset token is invalid or has expired");
+      throw new ApiError(415, "Password reset token is invalid or has expired");
     }
 
     //* 4-Send Response
@@ -685,7 +685,7 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
 
     //* 4-Throw an Error if Token is not matched in any User Doc
     if (!user) {
-      throw new ApiError(400, "Password reset token is invalid or has expired");
+      throw new ApiError(415, "Password reset token is invalid or has expired");
     }
 
     //* 5-Set New password

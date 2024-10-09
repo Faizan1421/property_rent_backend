@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/layout/Layout";
-
+import { Loader } from "lucide-react";
 import HomePage from "./pages/HomePage";
 import SignUpPage from "./pages/auth/SignUpPage";
 import LoginPage from "./pages/auth/LoginPage";
@@ -28,7 +28,9 @@ function App() {
    
    
   });
-  if (isLoading) return null;
+  
+
+  if (isLoading) return (<div className="flex justify-center items-center h-screen"> <Loader className='size-40 animate-spin text-blue-700' /> </div>)
   return (
     <Layout>
       <Routes>
