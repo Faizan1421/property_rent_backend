@@ -68,7 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     if (existedUser) {
       throw new ApiError(
-        409,
+        400,
         "User with Given Email or Username Already Exists"
       );
     }
@@ -91,13 +91,16 @@ const registerUser = asyncHandler(async (req, res) => {
     });
     console.log(user);
     if (!user) {
-      throw new ApiError(400, "somme thing went wrong....");
+      throw new ApiError(error.statusCode, error.message);
     }
 
     //* 6-Upload to Cloudinary - Avatar/Image --IMP use it here because it doesnot delete image on cloudinary if there is an validation error
-    const avatar = await uploadOnCloudinary(avatarLocalPath);
-    user.avatar = avatar?.url || "";
-    await user.save({ validateBeforeSave: true });
+    if(avatarLocalPath){
+      const avatar = await uploadOnCloudinary(avatarLocalPath);
+      user.avatar = avatar?.url || "";
+      await user.save({ validateBeforeSave: true });
+    }
+
 
     //* 7-Remove Password and Refresh Token from Response
 
@@ -583,10 +586,12 @@ const forgotPassword = asyncHandler(async (req, res) => {
     //* 3- Send email of password recovery with reset url by using nodemailer utility named sendEmail.js
 
     const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+    // const protocol ="https"; // we are hardcoding it for now.
 
     const host = config.BASE_URL || req.headers.host;
 
-    const resetUrl = `${protocol}://${host}/api/v1/users/reset-password/${resetToken}`;
+    // const resetUrl = `${protocol}://${host}/api/v1/users/reset-password/${resetToken}`;
+    const resetUrl = `${protocol}://${host}/reset-password/${resetToken}`;
 
     const message = `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
       Please click on the following link, or paste this into your browser to complete the process:\n\n
@@ -843,7 +848,7 @@ const getAllSellers = asyncHandler(async (req, res) => {
     const users = await User.aggregate([
       {
         $match: {
-          role: isAdmin? { $in: ["seller", "user"] } : "seller",
+          role: isAdmin ? { $in: ["seller", "user"] } : "seller",
         },
       },
       {
@@ -872,37 +877,43 @@ const getAllSellers = asyncHandler(async (req, res) => {
   }
 });
 
-
 //TODO: IMP: ONLY ADMIN-Dashboard ControllersTODO:
 
 //TODO: Verify or Unverify Sellers - /api/v1/dashboard/sellers/:id/verification -> GET request
 
 const verification = asyncHandler(async (req, res) => {
   const { id } = req.params;
-    try {
-      const user = await User.findById(id);
-      if (!user) {
-        throw new ApiError(404, "User not found");
-      }
-
-      const isAlreadyVerified = user?.isVerified;
-      const updatedUser = await User.findByIdAndUpdate(
-        id,
-        {
-          $set: {
-            isVerified: isAlreadyVerified ? false : true,
-          },
-        },
-        { new: true }
-      );
-      return res
-        .status(200)
-        .json(new ApiResponse(200, updatedUser, isAlreadyVerified ? "User verified successfully" : "User unverified successfully"));
-    } catch (error) {
-      throw new ApiError(error.statusCode, error.message);
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      throw new ApiError(404, "User not found");
     }
 
-})
+    const isAlreadyVerified = user?.isVerified;
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          isVerified: isAlreadyVerified ? false : true,
+        },
+      },
+      { new: true }
+    );
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          updatedUser,
+          isAlreadyVerified
+            ? "User verified successfully"
+            : "User unverified successfully"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(error.statusCode, error.message);
+  }
+});
 
 export {
   registerUser,
@@ -919,5 +930,5 @@ export {
   becomeSeller,
   getUserProfile,
   getAllSellers,
-  verification
+  verification,
 };

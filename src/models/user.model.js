@@ -30,7 +30,7 @@ const userSchema = new Schema(
       type: String,
       lowercase: true,
       enum: ["male", "female", "other"],
-      required: [true, "Gender is required"],
+      // required: [true, "Gender is required"],
     },
     avatar: {
       type: String, //cloudinary url

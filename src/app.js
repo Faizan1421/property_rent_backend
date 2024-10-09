@@ -6,10 +6,15 @@ const app = express();
 
 app.use(
   cors({
+    // must include credentials: true in frontend while using fetch method if you want to set cookie in browser- crediential :true inserver side cors option
+    //also must set cors origin if frontend is on deferent server
     origin: process.env.CORS_ORIGIN,
     credentials: true,
+  
   })
 );
+app.use(express.static("public"));
+app.use(cookieParser());
 
 app.use(
   express.json({
@@ -24,9 +29,7 @@ app.use(
   })
 );
 
-app.use(express.static("public"));
 
-app.use(cookieParser());
 
 // Import Routes
 import userRouter from "./routes/user.routes.js";
@@ -56,7 +59,7 @@ app.use(function (err, _, res, __) {
     success: false,
   };
 
-  res.status(statusCode).json(response);
+  return res.status(statusCode).json(response);
 });
 
 export { app };
