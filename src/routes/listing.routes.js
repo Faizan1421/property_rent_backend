@@ -18,7 +18,7 @@ router
   .route("/create-listing")
   .post(
     verifyJWT,
-    checkRole("seller"),
+    checkRole("seller", "admin"),
     upload.array("listingImages", 5),
     createListing
   );
