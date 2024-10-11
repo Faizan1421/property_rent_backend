@@ -42,23 +42,23 @@ const Navbar = () => {
 					<div className='flex items-center gap-2 md:gap-6'>
 						{authUser ? (
 							<>
-								<Link to={"/"} className=' text-gray-600 hover:text-gray-800 flex flex-col items-center'>
+								<Link to={"/"} className=' text-gray-600 hover:text-blue-600 flex flex-col items-center'>
 									<Home size={20} />
-									<span className='text-xs hidden md:block'>Home</span>
+									<span className='text-xs font-semibold hidden md:block'>Home</span>
 								</Link>
 								<Link
 									to={`/profile/${authUser.data.username}`}
-									className=' text-gray-600 hover:text-gray-800 flex flex-col items-center'
+									className=' text-gray-600  hover:text-blue-600 flex flex-col items-center'
 								>
 									<User size={20} />
-									<span className='text-xs hidden md:block'>Me</span>
+									<span className='text-xs font-semibold hidden md:block'>Me</span>
 								</Link>
 								<button
-									className='flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800'
+									className='flex items-center space-x-1 text-sm text-gray-600 hover:text-blue-600'
 									onClick={() => logout()}
 								>
 									<LogOut size={20} />
-									<span className='hidden md:inline'>Logout</span>
+									<span className='hidden font-semibold md:inline'>Logout</span>
 								</button>
 							</>
 						) : (

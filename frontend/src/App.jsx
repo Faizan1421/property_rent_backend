@@ -30,13 +30,13 @@ function App() {
   });
   
 
-  if (isLoading) return (<div className="flex justify-center items-center h-screen"> <Loader className='size-40 animate-spin text-blue-700' /> </div>)
+  if (isLoading) return (<div className="flex justify-center items-center h-screen"> <Loader className='size-10 animate-spin text-blue-700' /> </div>)
   return (
     <Layout>
       <Routes>
         <Route
           path="/"
-          element={authUser ? <HomePage /> : <Navigate to={"/login"} />}
+          element={<HomePage/>}
         />
         <Route
           path="/signup"

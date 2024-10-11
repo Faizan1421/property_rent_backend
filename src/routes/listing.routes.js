@@ -1,4 +1,4 @@
-import { Router } from "express";
+
 import {
   addListingImages,
   createListing,
@@ -12,6 +12,7 @@ import {
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { checkRole } from "../middlewares/checkRole.middleware.js";
+import { Router } from "express";
 const router = Router();
 router
   .route("/create-listing")

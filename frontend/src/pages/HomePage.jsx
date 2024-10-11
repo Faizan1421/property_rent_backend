@@ -1,9 +1,14 @@
+import Listings from "../components/Listings"
+import Slide from "../components/Slide"
 
 const HomePage = () => {
   return (
-    <div>
-        <h1>HomePage</h1>
-    </div>
+       <>
+       <Slide/>
+       <Listings/>
+       
+       </>
+    
   )
 }
 
