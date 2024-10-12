@@ -31,12 +31,12 @@ const Categories = () => {
   isSuccess && queryClient.invalidateQueries({ queryKey: ["listings"] });
 
   return isLoading ? (
-    <div>
-      <Loader className="size-10 animate-spin text-blue-700" />
+    <div className="flex justify-center items-center h-screen ">
+      <Loader className="size-10 animate-spin text-blue-700" />{" "}
     </div>
   ) : (
     <div className="">
-      <h1 className="p-12 text-center font-semibold text-5xl  text-blue-600">
+      <h1 className=" text-center font-semibold text-5xl  text-blue-600 ">
         Explore Top Categories
       </h1>
       <p className="pb-12 max-w-[700px] text-lg font-semibold text-gray-600 text-center mx-auto">
@@ -44,7 +44,7 @@ const Categories = () => {
         travelers. Immerse yourself in the local culture, enjoy the comforts of
         home, and create unforgettable memories in your dream destination.
       </p>
-      <div className="flex gap-2 justify-center ">
+      <div className="px-10 flex gap-2 justify-center overflow-hidden ">
         <button
           className={`btn btn-outline btn-primary ${selectedCategory.name === "all" && "btn-active"}`}
           onClick={() => {
