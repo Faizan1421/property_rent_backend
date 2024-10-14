@@ -7,20 +7,26 @@ import { axiosInstance } from "../lib/axios";
 import InfiniteScroll from "react-infinite-scroller";
 import { useEffect, useState } from "react";
 import { Loader } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-// import toast from "react-hot-toast";
+
 
 const Listings = () => {
-  const [categoryCheck, setCategoryCheck] = useState(false);
-
-  const queryClient = useQueryClient();
-  /////////////////////////////////////
+    const [categoryCheck, setCategoryCheck] = useState(false);
+    
+    const queryClient = useQueryClient();
+    
+    const navigate = useNavigate();
   const { data: category } = useQuery({
     queryKey: ["selectedCategory"],
     initialData: {
       name: "all",
     },
   });
+
+  const handleNavigate = (id) => {
+    navigate(`/listings/${id}`);
+}
 
   //   we are checking if category is changed then we will set categoryCheck to true for refetching listing data from server again.
   useEffect(() => {
@@ -90,12 +96,15 @@ const Listings = () => {
         {queryData.pages.map((page, index) => (
           <div
             key={index}
-            className="flex flex-wrap justify-center items-center "
+            className="flex flex-wrap justify-center items-center px-10"
           >
             {page.docs.map((item, index) => (
               <div
                 key={index}
                 className="card bg-base-100 w-80 shadow-lg m-5 cursor-pointer"
+                onClick={() => {
+                  handleNavigate(item._id);
+                }}
               >
                 <figure>
                   <img
@@ -109,10 +118,10 @@ const Listings = () => {
                 </figure>
                 <div className="card-body p-5">
                   <h2 className="card-title text-blue-600">
-                    {item.title}
+                    {item.title.substring(0, 15)}{`${item?.title?.length > 15 ? "..." : ""}`}
                     {/* <div className="badge badge-secondary">NEW</div> */}
                   </h2>
-                  <p className="text-gray-600">{item.description?.substring(0, 30)}...</p>
+                  <p className="text-gray-600">{item.description?.substring(0, 30)}{`${item?.description?.length > 30 ? "..." : ""}`}</p>
                   <div className="relative w-full max-w-md">
                     <div
                       className="absolute inset-0 flex items-center"

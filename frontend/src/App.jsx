@@ -10,6 +10,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "./lib/axios";
 import ProfilePage from "./pages/ProfilePage";
+import ListingDetailsPage from "./pages/ListingDetailsPage";
 
 function App() {
   const { data: authUser, isLoading } = useQuery({
@@ -25,12 +26,12 @@ function App() {
         toast.error(err.response.data.message || "Something went wrong");
       }
     },
-   
+    refetchOnWindowFocus: false, //refetchOnMount: false, for coming back on tab it will not refetch the data
    
   });
   
 
-  if (isLoading) return (<div className="flex justify-center items-center h-screen"> <Loader className='size-10 animate-spin text-blue-700' /> </div>)
+  // if (isLoading) return (<div className="flex justify-center items-center h-screen"> <Loader className='size-10 animate-spin text-blue-700' /> </div>)
   return (
     <Layout>
       <Routes>
@@ -57,6 +58,10 @@ function App() {
         <Route
           path="/profile/:username"
           element={authUser ? <ProfilePage /> : <Navigate to={"/login"} />}
+        />
+        <Route
+          path="/listings/:id"
+          element= {<ListingDetailsPage />}
         />
       </Routes>
       <Toaster 

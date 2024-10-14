@@ -8,6 +8,8 @@ const listingSchema = new Schema(
       required: true,
       lowercase: true,
       trim: true,
+      minlength: [5, "Title must be at least 5 characters"],
+      maxlength: [100, "Title must be at most 100 characters"],
     },
     description: {
       type: String,

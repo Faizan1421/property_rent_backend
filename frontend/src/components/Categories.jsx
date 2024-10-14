@@ -35,7 +35,7 @@ const Categories = () => {
       <Loader className="size-10 animate-spin text-blue-700" />{" "}
     </div>
   ) : (
-    <div className="">
+    <div className=" flex flex-col justify-center items-center mt-24 gap-10">
       <h1 className=" text-center font-semibold text-5xl  text-blue-600 ">
         Explore Top Categories
       </h1>
@@ -44,9 +44,9 @@ const Categories = () => {
         travelers. Immerse yourself in the local culture, enjoy the comforts of
         home, and create unforgettable memories in your dream destination.
       </p>
-      <div className="px-10 flex gap-2 justify-center overflow-hidden ">
+      <div className="px-10 flex gap-2 justify-center overflow-hidden  flex-wrap ">
         <button
-          className={`btn btn-outline btn-primary ${selectedCategory.name === "all" && "btn-active"}`}
+          className={`btn btn-outline btn-primary ${selectedCategory.name === "all" && "btn-active "}`}
           onClick={() => {
             queryClient.setQueryData(["selectedCategory"], () => {
               return {
@@ -59,7 +59,7 @@ const Categories = () => {
         </button>
         {categories.data?.map((data, key) => {
           return (
-            <div key={key} className="flex pb-12">
+            <div key={key} className="flex pb-20 ">
               <button
                 className={` btn btn-outline btn-primary  ${selectedCategory.name === data.name && "btn-active"}`}
                 onClick={() => {
