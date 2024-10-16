@@ -86,7 +86,7 @@ const Listings = () => {
   if (isError) return <div className="text-center w-full">{error.message}</div>;
 
   return (
-    <div>
+    <div className="mb-48">
       <InfiniteScroll
         loadMore={() => {
           if (!isFetching) fetchNextPage();
@@ -101,7 +101,7 @@ const Listings = () => {
             {page.docs.map((item, index) => (
               <div
                 key={index}
-                className="card bg-base-100 w-80 shadow-lg m-5 cursor-pointer"
+                className="card bg-base-100 w-80 h-80 shadow-lg m-5 cursor-pointer"
                 onClick={() => {
                   handleNavigate(item._id);
                 }}
@@ -114,6 +114,7 @@ const Listings = () => {
                         : `/public/assets/images/5.jpg`
                     }
                     alt="House"
+                    
                   />
                 </figure>
                 <div className="card-body p-5">
@@ -163,7 +164,7 @@ const Listings = () => {
         </div>
       )}
       {!hasNextPage && !isFetching && (
-        <div className="text-center w-full">No More Data</div>
+        <div className="text-center w-full mt-20">No More Data</div>
       )}
     </div>
   );
