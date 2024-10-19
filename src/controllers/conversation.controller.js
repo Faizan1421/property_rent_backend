@@ -153,7 +153,7 @@ const getAllConversations = asyncHandler(async (req, res) => {
               },
             },
             {
-              $sort: { createdAt: -1 },
+              $sort: { updatedAt: -1 },
             },
           ],
         },

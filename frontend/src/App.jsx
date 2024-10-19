@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "./lib/axios";
 import ProfilePage from "./pages/ProfilePage";
 import ListingDetailsPage from "./pages/ListingDetailsPage";
+import MessengerPage from "./pages/MessengerPage";
 
 function App() {
   const { data: authUser, isLoading } = useQuery({
@@ -64,9 +65,10 @@ function App() {
           element= {<ListingDetailsPage />}
         />
           <Route
-          path="/chat"
-          element={!authUser ? <LoginPage /> : <Navigate to={"/chat"} />}
+          path="/messenger/:id?"
+          element={authUser ? <MessengerPage /> : <Navigate to={"/login"} />}
         />
+        
       </Routes>
       <Toaster 
         position="bottom-center"

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "../../lib/axios";
-import { Link } from "react-router-dom";
-import { Home, LogOut, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import { Menu } from "lucide-react";
 const Navbar = () => {
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
@@ -18,7 +18,7 @@ const Navbar = () => {
   // 	queryFn: async () => axiosInstance.get("/connections/requests"),
   // 	enabled: !!authUser,
   // });
-
+   const navigate= useNavigate();
   const { mutate: logout } = useMutation({
     mutationFn: () => axiosInstance.post("/users/logout"),
     onSuccess: () => {
@@ -31,7 +31,7 @@ const Navbar = () => {
   // const unreadConnectionRequestsCount = connectionRequests?.data?.length;
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-10">
+    <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center py-3">
           <div className="flex items-center space-x-4">
@@ -69,7 +69,7 @@ const Navbar = () => {
                     <li className="hover:bg-blue-600 rounded-lg hover:text-white">
                       <a>Wishlist</a>
                     </li>
-                    <li className="hover:bg-blue-600 rounded-lg hover:text-white">
+                    <li className="hover:bg-blue-600 rounded-lg hover:text-white" onClick={() => navigate("/messenger")}>
                       <a>Messages</a>
                     </li>
                     <li>

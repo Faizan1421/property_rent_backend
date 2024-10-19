@@ -6,6 +6,8 @@ import Slider from "../components/Slider";
 import ListingDetailsSection from "../components/ListingDetailsSection";
 import ListingDetailsBelowSectionOne from "../components/ListingDetailsBelowSectionOne";
 import ListingDetailsBelowSectionTwo from "../components/ListingDetailsBelowSectionTwo";
+import ListingDetailsBelowSectionThree from "../components/ListingDetailsBelowSectionThree";
+import Comments from "../components/Comments";
 
 const ListingDetailsPage = () => {
   const { id } = useParams();
@@ -40,12 +42,20 @@ const ListingDetailsPage = () => {
         <ListingDetailsSection listingDetails={listingDetails} />
         </div>
       </div>
-      <div className="below_section pt-10 px-10  lg:px-60 ">
+      <div className="below_section1 pt-10 px-10  lg:px-60 ">
         <ListingDetailsBelowSectionOne listingDetails={listingDetails}/>
       </div>
-      <div  className="below_section pt-10 px-10  lg:px-60 ">
+      
+      <div  className="below_section2 pt-10 px-10  lg:px-60 ">
         <ListingDetailsBelowSectionTwo listingDetails={listingDetails}/>
       </div>
+      <div  className="below_section3 pt-10 px-10  lg:px-60 ">
+        <ListingDetailsBelowSectionThree listingDetails={listingDetails}/>
+      </div>
+      <div  className="below_section3 pt-10 px-10  lg:px-60 ">
+        <Comments listingDetails={listingDetails}/>
+      </div>
+      
     </div>
   );
 };

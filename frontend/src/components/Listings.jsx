@@ -101,7 +101,7 @@ const Listings = () => {
             {page.docs.map((item, index) => (
               <div
                 key={index}
-                className="card bg-base-100 w-80 h-80 shadow-lg m-5 cursor-pointer"
+                className="card bg-base-100 w-80 h-80 shadow-lg m-5 cursor-pointer hover:transform hover:scale-105 transition duration-300 ease-in-out hover:shadow-2xl"
                 onClick={() => {
                   handleNavigate(item._id);
                 }}
