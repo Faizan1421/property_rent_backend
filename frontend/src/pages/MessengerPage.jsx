@@ -30,6 +30,7 @@ const MessengerPage = () => {
        
       });
       console.log(conversationsData)
+   /* This code snippet is filtering out the conversations based on the current authenticated user. */
       const filteredConversations = conversationsData?.data?.map(conversation => {
         return {
          ...conversation,

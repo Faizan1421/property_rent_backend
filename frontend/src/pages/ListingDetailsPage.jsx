@@ -34,25 +34,25 @@ const ListingDetailsPage = () => {
 
   return (
     <div className=" py-10 lg:py-20 ">
-      <div className=" flex flex-col lg:flex-row lg:px-60 w-[100%] ">
+      <div className=" flex flex-col lg:flex-row  w-[100%] ">
         <div className= "slider_wraper lg:w-[60%]">
         <Slider listingDetails={listingDetails} />
         </div>
-        <div className="listing_details_wrapper px-10 lg:px-20 py-10">
+        <div className="listing_details_wrapper px-10 py-10">
         <ListingDetailsSection listingDetails={listingDetails} />
         </div>
       </div>
-      <div className="below_section1 pt-10 px-10  lg:px-60 ">
+      <div className="below_section1 pt-10 px-10   ">
         <ListingDetailsBelowSectionOne listingDetails={listingDetails}/>
       </div>
       
-      <div  className="below_section2 pt-10 px-10  lg:px-60 ">
+      <div  className="below_section2 pt-10 px-10   ">
         <ListingDetailsBelowSectionTwo listingDetails={listingDetails}/>
       </div>
-      <div  className="below_section3 pt-10 px-10  lg:px-60 ">
+      <div  className="below_section3 pt-10 px-10   ">
         <ListingDetailsBelowSectionThree listingDetails={listingDetails}/>
       </div>
-      <div  className="below_section3 pt-10 px-10  lg:px-60 ">
+      <div  className="below_section3 pt-10 px-10 ">
         <Comments listingDetails={listingDetails}/>
       </div>
       
