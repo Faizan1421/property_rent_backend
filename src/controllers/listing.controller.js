@@ -328,9 +328,9 @@ const addListingImages = asyncHandler(async (req, res) => {
 //TODO: Delete Listing Images
 
 const deleteListingImages = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
-  const listingId = req.params.id;
-  const publicId = req.params.publicId;
+  const userId = req?.user?._id;
+  const listingId = req?.params?.id;
+  const publicId = req?.params?.publicId;
   try {
     const listing = await Listing.findById(listingId);
     if (!listing) {
@@ -475,6 +475,33 @@ const getListingById = asyncHandler(async (req, res) => {
         },
        
       },
+      // is listing liked or add in wishlist by user
+      {
+        $lookup: {
+          from: "wishlists",
+          localField: "_id",
+          foreignField: "listing",
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          likesCount: {
+            $size: "$likes",
+          },
+          // bellow is condition for checking if user liked product by using map method on array to find id of user in likes array
+          isLiked: {
+            $cond: {
+              if: {
+                $in: [req.user?._id, { $map: { input: "$likes", as: "like", in: "$like.owner" } }],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+      //  ends here
     ]);
 
     if (aggregateListing.length < 1) {
