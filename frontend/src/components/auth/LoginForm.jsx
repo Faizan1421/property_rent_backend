@@ -5,6 +5,8 @@ import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 
 const LoginForm = () => {
+	
+	
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const queryClient = useQueryClient();
@@ -14,6 +16,7 @@ const LoginForm = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["authUser"] });
             toast.success("Logged in successfully");
+
 		},
 		onError: (err) => {
 			toast.error(err.response.data.message || "Something went wrong");

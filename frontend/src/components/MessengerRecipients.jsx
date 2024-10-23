@@ -3,13 +3,14 @@ import {  useQueryClient } from "@tanstack/react-query";
 import { CircleArrowDown } from "lucide-react";
 import { useEffect, useState } from "react";
 // import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 
 const MessengerRecipients = (data) => {
     /////////////////////////////
     const [isScrollAtEnd, setIsScrollAtEnd] = useState(false);
-
+   const params = useParams();
+   console.log("params", params);
     useEffect(() => {
       const handleScroll = () => {
         const scrollPosition = window.scrollY + window.innerHeight;
@@ -112,7 +113,7 @@ const MessengerRecipients = (data) => {
                         document.getElementById('my-drawer-2').click(); // Close the drawer
                     }}
                    
-                    className="rounded-xl  hover:bg-white hover:text-black "
+                    className= {`rounded-xl  hover:bg-white hover:text-black  ${params?.id === conversation?._id && "bg-blue-800 text-white" }`}
                   >
                     <div className="avatar">
                       <div className="w-14 rounded-full  ">
@@ -126,7 +127,7 @@ const MessengerRecipients = (data) => {
                           
                         />
                       </div>
-                      <h1 className="text-md ml-5">
+                      <h1 className={`text-md ml-5 ${params?.id === conversation?._id && "text-xl font-semiboldS " }`}>
                         {conversation?.participants[0]?.fullName}
                       </h1>
                     </div>

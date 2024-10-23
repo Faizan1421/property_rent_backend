@@ -116,12 +116,12 @@ const getComments = asyncHandler(async (req, res) => {
 //TODO: delete Comment by id
 
 const deleteComment = asyncHandler(async (req, res) => {
-  const { commentId, listingId } = req.params;
+  const { commentId } = req.params;
   const userId = req.user._id;
 
   try {
-    if (!commentId || !listingId) {
-      throw new ApiError(400, "Please provide commentId and listingId");
+    if (!commentId) {
+      throw new ApiError(400, "Please provide commentId ");
     }
 
     const comment = await Comment.findById(commentId);

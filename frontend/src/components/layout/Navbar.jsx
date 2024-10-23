@@ -45,7 +45,9 @@ const Navbar = () => {
           </div>
           <div className="flex items-center gap-2 md:gap-6">
             {authUser ? (
+               
               <div className="flex justify-end gap-3 items-center">
+                { authUser?.data?.role == "user" && <Link to="/admin/dashboard" className="btn ptn-primary bg-blue-600 text-white mr-2 hover:bg-white hover:text-blue-600 hover:border-blue-600">Become A Seller</Link>}
                 <button
                   className="flex items-center space-x-1 text-sm text-gray-600 hover:text-blue-600"
                   onClick={() => logout()}

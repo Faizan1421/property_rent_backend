@@ -399,6 +399,7 @@ const getListingById = asyncHandler(async (req, res) => {
                 username: 1,
                 fullName: 1,
                 avatar: 1,
+                createdAt: 1,
               },
             },
           ],
@@ -421,6 +422,7 @@ const getListingById = asyncHandler(async (req, res) => {
               $project: {
                 content: 1,
                 owner: 1,
+                createdAt: 1,
               },
             },
 
@@ -447,20 +449,31 @@ const getListingById = asyncHandler(async (req, res) => {
                   },
                 ],
               },
+             
             },
+            
             {
               $project: {
                 content: 1,
                 owner: {
                   $arrayElemAt: ["$owner", 0],
                 },
+                createdAt: 1,
               },
+              
+            },
+            
+            {
+              $sort: { createdAt: -1 },
             },
             {
-              $limit: 10,
-            },
+              $limit: 4,
+             
+            }
           ],
+          
         },
+       
       },
     ]);
 

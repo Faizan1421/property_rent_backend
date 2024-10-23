@@ -10,6 +10,6 @@ const router = Router();
 
 router.route("/:listingId").post(verifyJWT, addComment);
 router.route("/:listingId").get(getComments);
-router.route("/:listingId/:commentId").delete(verifyJWT, deleteComment);
+router.route("/:commentId").delete(verifyJWT, deleteComment);
 
 export default router;

@@ -4,7 +4,7 @@ const ListingDetailsBelowSectionThree = (data) => {
 
   return (
     <div>
-    <div className="flex flex-col border-[1px] border-gray-100 rounded-lg p-4 shadow-md mb-10">
+    <div className="flex flex-col border-[1px] border-gray-100 rounded-lg p-4  mb-10">
         <h1 className="text-2xl lg:text-2xl font-bold mb-6">Details</h1> 
         <h1 className="text-xs lg:text-sm font-bold  mb-6">Total Rooms {listingDetails?.rooms}</h1> 
         <div className="flex gap-2 font-semibold">
@@ -16,7 +16,7 @@ const ListingDetailsBelowSectionThree = (data) => {
         </div>
        
     </div>
-    <div className="flex flex-col border-[1px] border-gray-100 rounded-lg p-4 shadow-md ">
+    <div className="flex flex-col border-[1px] border-gray-100 rounded-lg p-4 ">
         <h1 className="text-2xl lg:text-2xl font-bold mb-6">Description</h1> 
         <h1  className="text-sm lg:text-sm mb-2 ">{listingDetails?.description}</h1> 
         {listingDetails?.highlight && <br/>} 

@@ -23,7 +23,7 @@ const Slider = (data) => {
         }}
         navigation={true}
         virtual
-        className="w-[100%] text-gray-100 text-sm font-semibold cursor-grabbing"
+        className="w-[100%] text-gray-100 text-sm font-semibold cursor-grabbing "
       >
         {images?.map((slideContent, index) => (
           <SwiperSlide
