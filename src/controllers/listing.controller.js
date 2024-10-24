@@ -364,14 +364,19 @@ const deleteListingImages = asyncHandler(async (req, res) => {
 
 //TODO: Get listing by id
 const getListingById = asyncHandler(async (req, res) => {
+
+  //get user id from access token or cookie for matching in aggregation query for wishlists or liked by in listing details page
   const incomingAccessToken =
-    req.cookies.accessToken || req.body.accessToken;
-  const decodedToken = jwt.verify(
-    incomingAccessToken,
-    process.env.ACCESS_TOKEN_SECRET
-  );
+    req?.cookies?.accessToken || req?.body?.accessToken ;
+    let decodedToken;
+    if(incomingAccessToken){
+       decodedToken = jwt.verify(
+        incomingAccessToken,
+        process.env.ACCESS_TOKEN_SECRET
+      );
+    }
   const userId = decodedToken?._id;
- console.log(userId);
+ 
 
   
   const listingId = req.params.id;
