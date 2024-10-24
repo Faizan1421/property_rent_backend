@@ -97,8 +97,13 @@ const getAllWishlists = asyncHandler(async (req, res) => {
       },
       {
         path: "listing",
-        select: " title description price images ",
-      },
+        select: " title description categories price images location ",
+        populate: {
+          path: "categories",
+          select: "name" // or any other fields you want to fetch from the categories collection
+        }
+      }
+
     ]);
   });
 

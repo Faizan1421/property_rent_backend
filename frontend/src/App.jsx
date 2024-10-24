@@ -12,6 +12,7 @@ import { axiosInstance } from "./lib/axios";
 import ProfilePage from "./pages/ProfilePage";
 import ListingDetailsPage from "./pages/ListingDetailsPage";
 import MessengerPage from "./pages/MessengerPage";
+import WishlistPage from "./pages/WishlistPage";
 
 function App() {
   
@@ -68,6 +69,10 @@ function App() {
           <Route
           path="/messenger/:id?"
           element={authUser ? <MessengerPage /> : <Navigate to={"/login"} />}
+        />
+          <Route
+          path="/wishlist"
+          element={authUser ? <WishlistPage /> : <Navigate to={"/login"} />}
         />
         
       </Routes>

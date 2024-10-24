@@ -68,7 +68,7 @@ const Navbar = () => {
                     tabIndex={0}
                     className="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow mt-4"
                   >
-                    <li className="hover:bg-blue-600 rounded-lg hover:text-white">
+                    <li className="hover:bg-blue-600 rounded-lg hover:text-white" onClick={() => navigate("/wishlist")}>
                       <a>Wishlist</a>
                     </li>
                     <li className="hover:bg-blue-600 rounded-lg hover:text-white" onClick={() => navigate("/messenger")}>

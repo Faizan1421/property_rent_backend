@@ -48,7 +48,7 @@ const createListing = asyncHandler(async (req, res) => {
     const user = req.user;
     //get categories from database because its a refernce to store in listing
     const getCategories = await Category.find({ name: { $in: categories } });
-
+console.log(getCategories);
     //* 3- Create listing Object by Listing Model - Create Entry in DB
     const createdListing = await Listing.create({
       title,
@@ -57,7 +57,7 @@ const createListing = asyncHandler(async (req, res) => {
       highlightDesc,
       price,
       rooms,
-      categories: getCategories || [],
+      categories: getCategories || null,
       amenities,
       location,
       owner: user._id,
@@ -376,11 +376,9 @@ const getListingById = asyncHandler(async (req, res) => {
       );
     }
   const userId = decodedToken?._id;
- 
-
   
   const listingId = req.params.id;
-  console.log(req?.user?._id, "back id check");
+ 
   try {
     //* 1-check if listing id is valid/objectid  or not
     const checkID = mongoose.Types.ObjectId.isValid(listingId);

@@ -204,7 +204,7 @@ const Comments = (data) => {
           >
             <div className="modal-box  max-w-full ">
               <div className="modal-action sticky top-0 ">
-                <a href="#" className="btn">
+                <a href="#" className="btn ptn-primary bg-blue-600 text-white mr-2 hover:bg-white hover:text-blue-600 hover:border-blue-600">
                   Close
                 </a>
               </div>
@@ -233,11 +233,11 @@ const Comments = (data) => {
                       </div>
                       {/* Dropdown menu */}
                       {authUser?.data?._id == item?.owner?._id && (
-                        <div className="dropdown dropdown-top dropdown-end">
+                        <div className="dropdown dropdown-top dropdown-end mx-20 ">
                           <div
                             tabIndex={0}
                             role="button"
-                            className="btn m-1 bg-transparent border-none hover:bg-blue-600 hover:text-white"
+                            className="btn bg-transparent border-none hover:bg-blue-600 hover:text-white "
                           >
                             <EllipsisVertical />
                           </div>
