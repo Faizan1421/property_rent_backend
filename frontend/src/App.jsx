@@ -14,6 +14,7 @@ import ListingDetailsPage from "./pages/ListingDetailsPage";
 import MessengerPage from "./pages/MessengerPage";
 
 function App() {
+  
   const { data: authUser, isLoading } = useQuery({
     queryKey: ["authUser"],
     queryFn: async () => {

@@ -10,6 +10,7 @@ import {
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 import fs from "fs";
+import jwt from "jsonwebtoken";
 
 //TODO: Create Listing
 
@@ -363,7 +364,18 @@ const deleteListingImages = asyncHandler(async (req, res) => {
 
 //TODO: Get listing by id
 const getListingById = asyncHandler(async (req, res) => {
+  const incomingAccessToken =
+    req.cookies.accessToken || req.body.accessToken;
+  const decodedToken = jwt.verify(
+    incomingAccessToken,
+    process.env.ACCESS_TOKEN_SECRET
+  );
+  const userId = decodedToken?._id;
+ console.log(userId);
+
+  
   const listingId = req.params.id;
+  console.log(req?.user?._id, "back id check");
   try {
     //* 1-check if listing id is valid/objectid  or not
     const checkID = mongoose.Types.ObjectId.isValid(listingId);
@@ -449,9 +461,8 @@ const getListingById = asyncHandler(async (req, res) => {
                   },
                 ],
               },
-             
             },
-            
+
             {
               $project: {
                 content: 1,
@@ -460,20 +471,16 @@ const getListingById = asyncHandler(async (req, res) => {
                 },
                 createdAt: 1,
               },
-              
             },
-            
+
             {
               $sort: { createdAt: -1 },
             },
             {
               $limit: 4,
-             
-            }
+            },
           ],
-          
         },
-       
       },
       // is listing liked or add in wishlist by user
       {
@@ -489,18 +496,24 @@ const getListingById = asyncHandler(async (req, res) => {
           likesCount: {
             $size: "$likes",
           },
-          // bellow is condition for checking if user liked product by using map method on array to find id of user in likes array
           isLiked: {
-            $cond: {
-              if: {
-                $in: [req.user?._id, { $map: { input: "$likes", as: "like", in: "$like.owner" } }],
-              },
-              then: true,
-              else: false,
-            },
-          },
-        },
-      },
+            $reduce: {
+              input: "$likes",
+              initialValue: false,
+              in: {
+                $cond: {
+                  if: {
+                    $eq: ["$$this.owner", new mongoose.Types.ObjectId(userId)]
+                  },
+                  then: true,
+                  else: "$$value"
+                }
+              }
+            }
+          }
+        }
+      }
+
       //  ends here
     ]);
 
