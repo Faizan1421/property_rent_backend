@@ -13,7 +13,7 @@ const ListingDetailsBelowSectionOne = (data) => {
   const { mutate: createConversation } = useMutation({
     mutationFn: (userData) => axiosInstance.post("/conversations", userData),
     onSuccess: (res) => {
-      // console.log(res?.data?.data?._id);
+      // (res?.data?.data?._id);
 
       navigate(`/messenger/${res?.data?.data?._id}`);
     },
@@ -41,7 +41,7 @@ const ListingDetailsBelowSectionOne = (data) => {
               src={
                 listingDetails?.owner?.avatar
                   ? listingDetails?.owner?.avatar
-                  : "/public/avatar.png"
+                  : "/avatar.png"
               }
               alt="Profile Image"
             />

@@ -14,7 +14,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
     }
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    console.log(decodedToken);
+    (decodedToken);
     if (!decodedToken) {
       throw new ApiError(401, "Token is Expired, Try to Login First");
     }

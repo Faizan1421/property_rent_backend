@@ -48,7 +48,7 @@ const createListing = asyncHandler(async (req, res) => {
     const user = req.user;
     //get categories from database because its a refernce to store in listing
     const getCategories = await Category.find({ name: { $in: categories } });
-console.log(getCategories);
+(getCategories);
     //* 3- Create listing Object by Listing Model - Create Entry in DB
     const createdListing = await Listing.create({
       title,
@@ -68,7 +68,7 @@ console.log(getCategories);
     const imageUploaded = await bulkUploadOnCloudinary({
       localImagesPath,
     });
-    // console.log(imageUploaded);
+    // (imageUploaded);
     createdListing.images = imageUploaded ? imageUploaded : [];
     await createdListing.save({ new: true });
     const data = await createdListing.populate({
@@ -86,7 +86,7 @@ console.log(getCategories);
     //  const imageDeleted = await bulkUploadOnCloudinary({
     //   publicIds,
     // });
-    // console.log(imageDeleted)
+    // (imageDeleted)
   } catch (error) {
     //Best way to handle builtin validation errors
     if (error instanceof mongoose.Error.ValidationError) {
@@ -95,7 +95,7 @@ console.log(getCategories);
       );
       throw new ApiError(400, errorMessages[errorMessages.length - 1]);
     } else {
-      console.log("Other error:", error.message);
+      ("Other error:", error.message);
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -138,7 +138,7 @@ const deleteListing = asyncHandler(async (req, res) => {
     }
     //* 6-delete listing
     const resultDeleted = await Listing.deleteOne({ _id: listingId });
-    // console.log(resultDeleted)
+    // (resultDeleted)
     if (resultDeleted.deletedCount === 0) {
       throw new ApiError(500, "Error deleting listing");
     }
@@ -248,7 +248,7 @@ const updateListing = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      console.log("other error:", error.message);
+      ("other error:", error.message);
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -542,6 +542,20 @@ const getListingById = asyncHandler(async (req, res) => {
 //TODO: send sellers profile  with listing uploaded by seller and more in get all listings
 
 const getAllListings = asyncHandler(async (req, res) => {
+ 
+    //get user id from access token or cookie for matching in aggregation query for wishlists or liked by in listing details page
+    const incomingAccessToken =
+    req?.cookies?.accessToken || req?.body?.accessToken ;
+    let decodedToken;
+    if(incomingAccessToken){
+       decodedToken = jwt.verify(
+        incomingAccessToken,
+        process.env.ACCESS_TOKEN_SECRET
+      );
+    }
+  const userId = decodedToken?._id;
+
+
   try {
     // Retrieve category name from route params
     const categoryName = req.params?.category?.toLowerCase() || "all";
@@ -561,66 +575,100 @@ const getAllListings = asyncHandler(async (req, res) => {
       categoryMatchStage = { "categories.name": categoryName };
     }
 
-    const aggregateListing = Listing.aggregate([
-      { $match: { isPublished: true } }, // Match published items
+   const aggregateListing = Listing.aggregate([
+  { $match: { isPublished: true } }, // Match published items
 
-      // Lookup categories
-      {
-        $lookup: {
-          from: "categories",
-          localField: "categories",
-          foreignField: "_id",
-          as: "categories",
-        },
+  // Lookup categories
+  {
+    $lookup: {
+      from: "categories",
+      localField: "categories",
+      foreignField: "_id",
+      as: "categories",
+    },
+  },
+  { $unwind: "$categories" }, // Unwind to treat each category as an object
+
+  // Match category name if not "all"
+ ...(categoryName!== "all"? [{ $match: categoryMatchStage }] : []),
+
+  // Lookup owner details
+  {
+    $lookup: {
+      from: "users",
+      localField: "owner",
+      foreignField: "_id",
+      as: "owner",
+      pipeline: [
+        { $project: { _id: 1, username: 1, fullName: 1, avatar: 1 } },
+      ],
+    },
+  },
+  { $unwind: { path: "$owner", preserveNullAndEmptyArrays: true } },
+
+  // Group by product _id to ensure uniqueness
+  {
+    $group: {
+      _id: "$_id",
+      product: { $first: "$$ROOT" },
+    },
+  },
+  { $replaceRoot: { newRoot: "$product" } },
+
+  // is listing liked or add in wishlist by user
+  {
+    $lookup: {
+      from: "wishlists",
+      localField: "_id",
+      foreignField: "listing",
+      as: "likes",
+    },
+  },
+  {
+    $addFields: {
+      likesCount: {
+        $size: "$likes",
       },
-      { $unwind: "$categories" }, // Unwind to treat each category as an object
+      isLiked: {
+        $reduce: {
+          input: "$likes",
+          initialValue: false,
+          in: {
+            $cond: {
+              if: {
+                $eq: ["$$this.owner", new mongoose.Types.ObjectId(userId)]
+              },
+              then: true,
+              else: "$$value"
+            }
+          }
+        }
+      }
+    }
+  },
 
-      // Match category name if not "all"
-      ...(categoryName !== "all" ? [{ $match: categoryMatchStage }] : []),
-
-      // Lookup owner details
-      {
-        $lookup: {
-          from: "users",
-          localField: "owner",
-          foreignField: "_id",
-          as: "owner",
-          pipeline: [
-            { $project: { _id: 1, username: 1, fullName: 1, avatar: 1 } },
-          ],
-        },
-      },
-      { $unwind: { path: "$owner", preserveNullAndEmptyArrays: true } },
-
-      // Group by product _id to ensure uniqueness
-      {
-        $group: {
-          _id: "$_id",
-          product: { $first: "$$ROOT" },
-        },
-      },
-      { $replaceRoot: { newRoot: "$product" } },
-
-      // Project the required fields
-      {
-        $project: {
-          title: 1,
-          description: 1,
-          highlight: 1,
-          highlightDesc: 1,
-          price: 1,
-          images: 1,
-          rooms: 1,
-          categories: 1,
-          amenities: 1,
-          isPublished: 1,
-          isSold: 1,
-          owner: 1,
-          location: 1,
-          createdAt: 1,
-        },
-      },
-    ]);
+  // Project the required fields
+  {
+    $project: {
+      title: 1,
+      description: 1,
+      highlight: 1,
+      highlightDesc: 1,
+      price: 1,
+      images: 1,
+      rooms: 1,
+      categories: 1,
+      amenities: 1,
+      isPublished: 1,
+      isSold: 1,
+      owner: 1,
+      location: 1,
+      createdAt: 1,
+      likesCount: 1,
+      isLiked: 1,
+    },
+  },
+]);
 
     if (!aggregateListing) {
       throw new ApiError(500, "An Error Ocurred While Fetching Products");
@@ -646,7 +694,7 @@ const getAllListings = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, result, "Listings Fetched Successfully"));
   } catch (error) {
-    console.log(error);
+    (error);
     throw new ApiError(error.statusCode, error.message);
   }
 });
@@ -657,7 +705,7 @@ const searchListings = asyncHandler(async (req, res) => {
   try {
     const { q: query } = req.query;
 
-    console.log(query);
+    (query);
     const aggregateListing = Listing.aggregate([
       {
         $lookup: {

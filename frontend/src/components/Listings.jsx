@@ -26,7 +26,7 @@ const Listings = () => {
 
   //   we are checking if category is changed then we will set categoryCheck to true for refetching listing data from server again.
   useEffect(() => {
-    console.log("render again");
+    ("render again");
 
     if (category) setCategoryCheck(true);
     return;
@@ -43,7 +43,7 @@ const Listings = () => {
     const { data } = await axiosInstance.get(
       `listings/c/${category.name}?page=${pageParam}&limit=12`
     );
-    console.log(data);
+    (data);
     return data.data;
   };
 
@@ -75,7 +75,7 @@ const Listings = () => {
   //////////////////////////////////////////
 
   if (isLoading) return <div className="text-center w-full">Loading...</div>;
-  console.log(queryData);
+  (queryData);
   if (!queryData && !isLoading)
     return <div className="text-center w-full">No data</div>;
 

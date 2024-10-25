@@ -64,7 +64,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const existedUser = await User.findOne({
       $or: [{ username: username?.replace(/ /g, "") }, { email }],
     });
-    // console.log(existedUser)
+    // (existedUser)
 
     if (existedUser) {
       throw new ApiError(
@@ -75,9 +75,9 @@ const registerUser = asyncHandler(async (req, res) => {
 
     //* 4-Check For Avatar/Image
 
-    // console.log(req.file);
+    // (req.file);
     const avatarLocalPath = req.file?.path;
-    // console.log(avatarLocalPath);
+    // (avatarLocalPath);
 
     //* 5-Create User Object by User Model - Create Entry in DB
 
@@ -89,18 +89,17 @@ const registerUser = asyncHandler(async (req, res) => {
       password,
       phone,
     });
-    console.log(user);
+    (user);
     if (!user) {
       throw new ApiError(error.statusCode, error.message);
     }
 
     //* 6-Upload to Cloudinary - Avatar/Image --IMP use it here because it doesnot delete image on cloudinary if there is an validation error
-    if(avatarLocalPath){
+    if (avatarLocalPath) {
       const avatar = await uploadOnCloudinary(avatarLocalPath);
       user.avatar = avatar?.url || "";
       await user.save({ validateBeforeSave: true });
     }
-
 
     //* 7-Remove Password and Refresh Token from Response
 
@@ -127,7 +126,7 @@ const registerUser = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      console.log("other error:", error.message);
+      ("other error:", error.message);
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -291,7 +290,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     //* 4- verify if that user id exist in database or not
 
     const user = await User.findById(decodedToken?._id);
-    // console.log("user refresh token database", user.refreshToken);
+    // ("user refresh token database", user.refreshToken);
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
@@ -398,7 +397,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   //* 1- Get Data from req.body
   // ...rest will give us an object containing all/any keys in req.body
   const { email, username, ...rest } = req.body;
-  // console.log(rest);
+  // (rest);
   try {
     //! Important:
     //* 2- check if req has keys to update secure data like password, refreshtoken,role etc than throw Error.
@@ -426,7 +425,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       return key in rest;
     });
 
-    // console.log(checkRestrictedKeys);
+    // (checkRestrictedKeys);
     // if any restricted key is found from find method we will throw an error.
 
     if (checkRestrictedKeys) {
@@ -470,7 +469,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      console.log("other error:", error.message);
+      ("other error:", error.message);
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -501,7 +500,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   try {
     // we will fetch avatar from user doc after destructuring. because we are receive id and avatar in obj
     const { avatar } = await User.findOne({ _id }, "avatar");
-    // console.log(avatar);
+    // (avatar);
 
     //* 3- split url and get public id from url
 
@@ -545,7 +544,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      console.log("other error:", error.message);
+      ("other error:", error.message);
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -712,7 +711,7 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      console.log("other error:", error.message);
+      ("other error:", error.message);
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -761,12 +760,22 @@ const becomeSeller = asyncHandler(async (req, res) => {
 //TODO: implement viewing other seller/user public profile - /api/v1/users/u/:id -> GET request
 
 const getUserProfile = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { username } = req.params;
+
+  //* 3- find user that matches resetpasswordtoken with token comming in params and resetpasswordexpiry check.
+
+  const user = await User.findOne({username});
+
+  //* 4-Throw an Error if Token is not matched in any User Doc
+  if (!user) {
+    throw new ApiError(404, "User Not found");
+  }
+
   try {
     const userAggregate = await User.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(id),
+          username,
         },
       },
       {

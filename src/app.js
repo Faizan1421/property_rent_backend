@@ -1,9 +1,10 @@
 import express, { urlencoded } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "path";
 
+const __dirname = path.resolve()
 const app = express();
-
 app.use(
   cors({
     // must include credentials: true in frontend while using fetch method if you want to set cookie in browser- crediential :true inserver side cors option
@@ -13,7 +14,8 @@ app.use(
   
   })
 );
-app.use(express.static("public"));
+
+
 app.use(cookieParser());
 
 app.use(
@@ -49,6 +51,17 @@ app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/conversations", conversationRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
 app.use("/api/v1/category", categoryRouter);
+
+// Always write bellow the all Routes
+// Serve static files
+app.use(express.static("public"));
+
+// Always write bellow the all Routes
+// Catch all route
+app.get('/*', (req, res) => {
+  // ('Route hit:', req.url);
+  res.sendFile(__dirname + "/public/index.html");
+});
 
 // Error Handling Middleware which send error in json.
 //it must be put at the end of all routes and middlewares before export.

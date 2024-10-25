@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 const ListingDetailsBelowSectionTwo = (data) => {
   const listingDetails = data?.listingDetails?.data[0];
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  //   console.log(authUser?.data?._id, "authUser");
+  //   (authUser?.data?._id, "authUser");
 
   const queryClient = useQueryClient();
 

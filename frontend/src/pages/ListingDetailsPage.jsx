@@ -29,8 +29,8 @@ const ListingDetailsPage = () => {
   });
 
   !isLoading
-    ? console.log(listingDetails.data[0].images)
-    : console.log("loading");
+    ? (listingDetails.data[0].images)
+    : ("loading");
 
   return (
     <div className=" py-10 lg:py-20 px-5 lg:px-32 ">

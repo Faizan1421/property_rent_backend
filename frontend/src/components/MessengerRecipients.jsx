@@ -7,10 +7,10 @@ import { useNavigate, useParams } from "react-router-dom";
 
 
 const MessengerRecipients = (data) => {
-    /////////////////////////////
+   
     const [isScrollAtEnd, setIsScrollAtEnd] = useState(false);
    const params = useParams();
-   console.log("params", params);
+   ("params", params);
     useEffect(() => {
       const handleScroll = () => {
         const scrollPosition = window.scrollY + window.innerHeight;
@@ -33,9 +33,7 @@ const MessengerRecipients = (data) => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     };
     
-   
-  
-    ///////////////////////////
+
 
  const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -46,7 +44,7 @@ const MessengerRecipients = (data) => {
   //     conversationId: null,
   //   },
   // });
-  // console.log("conversationIdState", conversationIdState);
+  // ("conversationIdState", conversationIdState);
 
   //Method for Sorting conversation by using method of latest chat in conversation
   const sortedLatestConversation = data?.filteredConversations?.sort((a, b) => {
@@ -63,7 +61,7 @@ const MessengerRecipients = (data) => {
   });
 //!Note:
   // useEffect(() => {
-  //   console.log("rendered again messenger receipt");
+  //   ("rendered again messenger receipt");
   // }, [conversationIdState]);
 
   return (
@@ -121,7 +119,7 @@ const MessengerRecipients = (data) => {
                           src={
                             conversation?.participants[0]?.avatar
                               ? conversation?.participants[0]?.avatar
-                              : "/public/avatar.png"
+                              : "/avatar.png"
                           }
                           alt="Profile Image"
                           

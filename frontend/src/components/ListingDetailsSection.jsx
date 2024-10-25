@@ -15,7 +15,7 @@ const ListingDetailsSection = (data) => {
 	const { mutate: createConversation } = useMutation({
 		mutationFn: (userData) => axiosInstance.post("/conversations", userData),
 		onSuccess: (res) => {
-      // console.log(res?.data?.data?._id);
+      // (res?.data?.data?._id);
       navigate(`/messenger/${res?.data?.data?._id}`);
 		},
 		onError: (err) => {
@@ -45,7 +45,7 @@ const ListingDetailsSection = (data) => {
       <div className="flex gap-4 justify-start items-center lg:flex-col xl:flex-row">
         <div className="w-20 h-20 ">
           <img
-            src={`${listingDetails?.owner?.avatar ? listingDetails?.owner?.avatar : "/public/avatar.png"}`}
+            src={`${listingDetails?.owner?.avatar ? listingDetails?.owner?.avatar : "/avatar.png"}`}
             className="lg:w-20 lg:h-20 rounded-full object-cover"
           />
         </div>
@@ -56,7 +56,11 @@ const ListingDetailsSection = (data) => {
           <h2 className="text-md font-normal ">Member Since : {memberSince}</h2>
           <h2 className="text-sm font-bold mt-2 flex items-center">
             See Profile
-            <CircleArrowRight className="ml-2 hover:text-blue-600 hover:cursor-pointer" />{" "}
+            <CircleArrowRight
+            onClick={()=>{
+              navigate(`/profile/${listingDetails?.owner?.username}`)
+            }}
+            className="ml-2 hover:text-blue-600 hover:cursor-pointer" />
           </h2>
         </div>
       </div>
@@ -64,6 +68,7 @@ const ListingDetailsSection = (data) => {
         <h1
           className="btn ptn-primary bg-blue-600 text-white mr-2 hover:bg-white hover:text-blue-600 hover:border-blue-600  xl:w-72  "
           onClick={handleClick}
+          
         >
           Message
         </h1>

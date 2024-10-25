@@ -40,6 +40,6 @@ router
 router
   .route("/become-a-seller")
   .post(verifyJWT, checkRole("user"), becomeSeller);
-router.route("/u/:id").get(getUserProfile);
+router.route("/u/:username").get(getUserProfile);
 export default router;
 router.route("/sellers").get(getAllSellers);

@@ -35,11 +35,11 @@ const ResetPasswordForm = () => {
         toast.success("Token is Valid");
 
         if (res.data.success == true) {
-          console.log("true");
+          ("true");
         }
         return res.data;
       } catch (err) {
-        console.log("here");
+        ("here");
 		if (err.response && err.response.status === 415) {
 
 			setInvalidToken(true);

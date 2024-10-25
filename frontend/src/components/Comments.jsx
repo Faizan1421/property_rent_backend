@@ -8,15 +8,15 @@ import { EllipsisVertical } from "lucide-react";
 
 const Comments = (data) => {
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  // console.log(authUser?.data?._id, "authUser");
+  // (authUser?.data?._id, "authUser");
   const [createComment, setCreateComment] = useState("");
   const [commentAddedSuccessfully, setCommentAddedSuccessfully] =
     useState(false);
   const queryClient = useQueryClient();
   const params = useParams();
-  console.log(params);
+  (params);
   const comments = data?.listingDetails?.data[0]?.comments;
-  // console.log(comments?.length, "comments");
+  // (comments?.length, "comments");
 
   const handleDate = (createdAt) => {
     const bsonDate = createdAt;
@@ -61,7 +61,7 @@ const Comments = (data) => {
 
   // Delete a Comment
   const handleClickDeleteComment = (id) => {
-    console.log(id, "deleting id");
+    (id, "deleting id");
     deleteComment(id);
   };
 
@@ -137,7 +137,7 @@ const Comments = (data) => {
                           src={
                             item?.owner?.avatar
                               ? item?.owner?.avatar
-                              : "/public/avatar.png"
+                              : "/avatar.png"
                           }
                           alt="Profile Image"
                           className="mr-2 w-10 h-10 rounded-full object-cover"
@@ -145,7 +145,7 @@ const Comments = (data) => {
                         {item?.owner?.fullName}
                       </p>
                       <p className="text-sm text-gray-600">
-                        <time dateTime="" title="February 8th, 2022">
+                        <time dateTime={handleDate(item?.createdAt)} title={handleDate(item?.createdAt)}>
                           {handleDate(item?.createdAt)}
                         </time>
                       </p>
@@ -218,7 +218,7 @@ const Comments = (data) => {
                             src={
                               item?.owner?.avatar
                                 ? item?.owner?.avatar
-                                : "/public/avatar.png"
+                                : "/avatar.png"
                             }
                             alt="Profile Image"
                             className="mr-2 w-10 h-10 rounded-full object-cover"
@@ -226,7 +226,7 @@ const Comments = (data) => {
                           {item?.owner?.fullName}
                         </p>
                         <p className="text-sm text-gray-600 ">
-                          <time dateTime="" title="February 8th, 2022">
+                          <time dateTime={handleDate(item?.createdAt)} title={handleDate(item?.createdAt)}>
                             {handleDate(item?.createdAt)}
                           </time>
                         </p>

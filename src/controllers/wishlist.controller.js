@@ -68,7 +68,7 @@ const deleteFromWishlist = asyncHandler(async (req, res) => {
       listing: listingId,
       owner: userId,
     });
-    console.log(wishlist);
+    (wishlist);
     if (!wishlist) {
       throw new ApiError(404, "Add First to delete from wishlist");
     }

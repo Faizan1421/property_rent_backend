@@ -20,12 +20,12 @@ const Chat = () => {
   const queryClient = useQueryClient();
 
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  //   console.log(authUser?.data?._id, "authUser");
+  //   (authUser?.data?._id, "authUser");
   //!Note:
   // const { data: conversationIdState } = useQuery({
   //   queryKey: ["conversationIdState"],
   // });
-  // console.log("conversationIdState", conversationIdState);
+  // ("conversationIdState", conversationIdState);
 
   const { id: conversationId } = useParams();
   //!Note:
@@ -54,7 +54,7 @@ const Chat = () => {
   });
 
   useEffect(() => {
-    console.log("rendered use effect single conversation");
+    ("rendered use effect single conversation");
     setconversationIdChange(true);
     // animateScroll.scrollToBottom(options);
 
@@ -70,7 +70,7 @@ const Chat = () => {
     setconversationIdChange(false);
     animateScroll.scrollToBottom(options);
   }
-  console.log("conversationIdChange", conversationIdChange);
+  ("conversationIdChange", conversationIdChange);
 
   // mutation for sending msg
 
@@ -128,7 +128,7 @@ const Chat = () => {
                         <div className="w-10 rounded-full">
                           <img
                             alt="Tailwind CSS chat bubble component"
-                            src={`${chat?.sender[0]?.avatar ? chat?.sender[0]?.avatar : "/public/avatar.png"} `}
+                            src={`${chat?.sender[0]?.avatar ? chat?.sender[0]?.avatar : "/avatar.png"} `}
                           />
                         </div>
                       </div>

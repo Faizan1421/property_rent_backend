@@ -10,7 +10,7 @@ const MessengerPage = () => {
     
 
     const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-// console.log(authUser?.data?._id, "authUser");
+// (authUser?.data?._id, "authUser");
 
 
     const { data: conversationsData } = useQuery({
@@ -29,7 +29,7 @@ const MessengerPage = () => {
         refetchOnWindowFocus: false, //refetchOnMount: false, for coming back on tab it will not refetch the data
        
       });
-      console.log(conversationsData)
+      (conversationsData)
    /* This code snippet is filtering out the conversations based on the current authenticated user. */
       const filteredConversations = conversationsData?.data?.map(conversation => {
         return {
@@ -38,7 +38,7 @@ const MessengerPage = () => {
         }
       });
       
-      console.log(filteredConversations);
+      (filteredConversations);
    
       
 

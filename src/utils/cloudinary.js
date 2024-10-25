@@ -40,19 +40,19 @@ const uploadOnCloudinary = async (
         },
       ],
     });
-    // console.log(publicIdOfOldAvatar);
+    // (publicIdOfOldAvatar);
     //File has Uploaded Successfully
     fs.unlinkSync(localFilePath);
-    // console.log(cloudinaryResponse);
+    // (cloudinaryResponse);
 
     //! we are receiving public id if we want to delete old avatar.
     if (publicIdOfOldAvatar) {
       await cloudinary.uploader.destroy(publicIdOfOldAvatar);
     }
-    // console.log(cloudinaryResponse);
+    // (cloudinaryResponse);
     return cloudinaryResponse;
   } catch (error) {
-    console.log("Error While Uploading to Cloudinary", error);
+    ("Error While Uploading to Cloudinary", error);
 
     fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the upload operation got failed
     return null;
@@ -89,11 +89,11 @@ const bulkUploadOnCloudinary = async ({ localImagesPath }) => {
       });
       return cloudinaryResponse;
     } else {
-      console.log(publicIds);
+      (publicIds);
       return null;
     }
   } catch (error) {
-    console.log("Error While Uploading to Cloudinary", error);
+    ("Error While Uploading to Cloudinary", error);
 
     // remove the locally saved temporary file as the upload operation got failed
     localImagesPath.map((res) => {
@@ -111,7 +111,7 @@ const deleteBulkOnCloudinary = async (publicIds) => {
     }
     return result;
   } catch (error) {
-    console.log("Error While Deleting from Cloudinary", error);
+    ("Error While Deleting from Cloudinary", error);
     return null;
   }
 };
