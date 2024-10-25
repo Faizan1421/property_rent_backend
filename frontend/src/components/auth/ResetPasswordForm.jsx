@@ -4,30 +4,29 @@ import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { useNavigate } from'react-router-dom';
+import { useNavigate } from "react-router-dom";
 const ResetPasswordForm = () => {
   const [invalidToken, setInvalidToken] = useState(false);
   const [password, setPassword] = useState("");
   // const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { token } = useParams();
-  
+
   const { mutate: resetPassword, isPending } = useMutation({
     mutationFn: (pass) =>
       axiosInstance.post(`/users/reset-password/${token}`, pass),
     onSuccess: () => {
       toast.success("Password Changed Successfully");
-	  navigate("/login")
+      navigate("/login");
     },
     onError: (err) => {
-		if (err.response && err.response.status === 415) {
-
-			setInvalidToken(true);
-		}
+      if (err.response && err.response.status === 415) {
+        setInvalidToken(true);
+      }
       toast.error(err.response.data.message || "Something went wrong");
     },
   });
-    useQuery({
+  useQuery({
     queryKey: ["checkResetPassToken"],
     queryFn: async () => {
       try {
@@ -40,10 +39,9 @@ const ResetPasswordForm = () => {
         return res.data;
       } catch (err) {
         ("here");
-		if (err.response && err.response.status === 415) {
-
-			setInvalidToken(true);
-		}
+        if (err.response && err.response.status === 415) {
+          setInvalidToken(true);
+        }
         toast.error(err.response.data.message || "Something went wrong");
       }
     },
@@ -69,7 +67,7 @@ const ResetPasswordForm = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input input-bordered w-full"
-			  disabled ={isPending}
+              disabled={isPending}
               required
             />
 

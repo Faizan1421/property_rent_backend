@@ -5,54 +5,51 @@ import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
 
 const LoginForm = () => {
-	
-	
-	const [username, setUsername] = useState("");
-	const [password, setPassword] = useState("");
-	const queryClient = useQueryClient();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const queryClient = useQueryClient();
 
-	const { mutate: loginMutation, isPending } = useMutation({
-		mutationFn: (userData) => axiosInstance.post("/users/login", userData),
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["authUser"] });
-            toast.success("Logged in successfully");
+  const { mutate: loginMutation, isPending } = useMutation({
+    mutationFn: (userData) => axiosInstance.post("/users/login", userData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      toast.success("Logged in successfully");
+    },
+    onError: (err) => {
+      toast.error(err.response.data.message || "Something went wrong");
+    },
+  });
 
-		},
-		onError: (err) => {
-			toast.error(err.response.data.message || "Something went wrong");
-		},
-	});
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    loginMutation({ username, password });
+  };
 
-	const handleSubmit = (e) => {
-		e.preventDefault();
-		loginMutation({ username, password });
-	};
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-md">
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="input input-bordered w-full"
+        disabled={isPending}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="input input-bordered w-full"
+        disabled={isPending}
+        required
+      />
 
-	return (
-		<form onSubmit={handleSubmit} className='space-y-4 w-full max-w-md'>
-			<input
-				type='text'
-				placeholder='Username'
-				value={username}
-				onChange={(e) => setUsername(e.target.value)}
-				className='input input-bordered w-full'
-				disabled={isPending}
-				required
-			/>
-			<input
-				type='password'
-				placeholder='Password'
-				value={password}
-				onChange={(e) => setPassword(e.target.value)}
-				className='input input-bordered w-full'
-				disabled={isPending}
-				required
-			/>
-
-			<button type='submit' className='btn btn-primary w-full'>
-				{isPending ? <Loader className='size-5 animate-spin' /> : "Login"}
-			</button>
-		</form>
-	);
+      <button type="submit" className="btn btn-primary w-full">
+        {isPending ? <Loader className="size-5 animate-spin" /> : "Login"}
+      </button>
+    </form>
+  );
 };
 export default LoginForm;

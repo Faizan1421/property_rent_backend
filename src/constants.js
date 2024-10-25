@@ -1,4 +1,3 @@
-
 const cookiesOptions = {
   httpOnly: true,
   secure: true,
@@ -6,7 +5,6 @@ const cookiesOptions = {
   maxAge: 24 * 60 * 60 * 1000, // 1 day
   // domain: "pos9.fourelementx.com",
   // path: "/",
-
 };
 
 export { cookiesOptions };

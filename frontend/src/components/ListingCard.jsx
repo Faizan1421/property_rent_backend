@@ -1,20 +1,17 @@
 import { useNavigate } from "react-router-dom";
 
 const ListingCard = (data) => {
-  (data, "data");
+  data, "data";
   const item = data?.item;
-  
-
 
   const navigate = useNavigate();
   const handleNavigate = (id) => {
     navigate(`/listings/${id}`);
   };
 
-  (item, "item");
+  item, "item";
   return (
     <div
-     
       className="card bg-base-100 w-80 h-80 shadow-lg m-5 cursor-pointer hover:transform hover:scale-105 transition duration-300 ease-in-out hover:shadow-2xl"
       onClick={() => {
         handleNavigate(item?._id);
@@ -68,6 +65,6 @@ const ListingCard = (data) => {
       </div>
     </div>
   );
-}
+};
 
 export default ListingCard;

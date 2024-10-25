@@ -3,7 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 
-const __dirname = path.resolve()
+const __dirname = path.resolve();
 const app = express();
 app.use(
   cors({
@@ -11,10 +11,8 @@ app.use(
     //also must set cors origin if frontend is on deferent server
     origin: process.env.CORS_ORIGIN,
     credentials: true,
-  
   })
 );
-
 
 app.use(cookieParser());
 
@@ -30,8 +28,6 @@ app.use(
     limit: "16kb",
   })
 );
-
-
 
 // Import Routes
 import userRouter from "./routes/user.routes.js";
@@ -58,7 +54,7 @@ app.use(express.static("public"));
 
 // Always write bellow the all Routes
 // Catch all route
-app.get('/*', (req, res) => {
+app.get("/*", (req, res) => {
   // ('Route hit:', req.url);
   res.sendFile(__dirname + "/public/index.html");
 });

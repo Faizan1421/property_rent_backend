@@ -52,7 +52,7 @@ const uploadOnCloudinary = async (
     // (cloudinaryResponse);
     return cloudinaryResponse;
   } catch (error) {
-    ("Error While Uploading to Cloudinary", error);
+    "Error While Uploading to Cloudinary", error;
 
     fs.unlinkSync(localFilePath); // remove the locally saved temporary file as the upload operation got failed
     return null;
@@ -89,11 +89,11 @@ const bulkUploadOnCloudinary = async ({ localImagesPath }) => {
       });
       return cloudinaryResponse;
     } else {
-      (publicIds);
+      publicIds;
       return null;
     }
   } catch (error) {
-    ("Error While Uploading to Cloudinary", error);
+    "Error While Uploading to Cloudinary", error;
 
     // remove the locally saved temporary file as the upload operation got failed
     localImagesPath.map((res) => {
@@ -111,7 +111,7 @@ const deleteBulkOnCloudinary = async (publicIds) => {
     }
     return result;
   } catch (error) {
-    ("Error While Deleting from Cloudinary", error);
+    "Error While Deleting from Cloudinary", error;
     return null;
   }
 };

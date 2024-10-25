@@ -19,14 +19,11 @@ const ProfilePage = () => {
       }
     },
     refetchOnWindowFocus: false, //refetchOnMount: false, for coming back on tab it will not refetch the data
-   
   });
 
-  ("user profile",userProfile);
-  
-  return (
-    <div> ProfilePage</div>
-  )
-}
+  "user profile", userProfile;
 
-export default ProfilePage
+  return <div> ProfilePage</div>;
+};
+
+export default ProfilePage;

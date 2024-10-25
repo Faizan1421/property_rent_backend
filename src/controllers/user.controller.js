@@ -89,7 +89,7 @@ const registerUser = asyncHandler(async (req, res) => {
       password,
       phone,
     });
-    (user);
+    user;
     if (!user) {
       throw new ApiError(error.statusCode, error.message);
     }
@@ -126,7 +126,7 @@ const registerUser = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      ("other error:", error.message);
+      "other error:", error.message;
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -469,7 +469,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      ("other error:", error.message);
+      "other error:", error.message;
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -544,7 +544,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      ("other error:", error.message);
+      "other error:", error.message;
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -711,7 +711,7 @@ const resetPasswordNew = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      ("other error:", error.message);
+      "other error:", error.message;
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -764,7 +764,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 
   //* 3- find user that matches resetpasswordtoken with token comming in params and resetpasswordexpiry check.
 
-  const user = await User.findOne({username});
+  const user = await User.findOne({ username });
 
   //* 4-Throw an Error if Token is not matched in any User Doc
   if (!user) {

@@ -13,8 +13,6 @@ const options = {
   smooth: true,
 };
 const Chat = () => {
- 
-
   const [createMessage, setCreateMessage] = useState("");
 
   const queryClient = useQueryClient();
@@ -70,22 +68,21 @@ const Chat = () => {
     setconversationIdChange(false);
     animateScroll.scrollToBottom(options);
   }
-  ("conversationIdChange", conversationIdChange);
+  "conversationIdChange", conversationIdChange;
 
   // mutation for sending msg
 
-  const { mutate: sendMsg , isPending: isSendingMsg } = useMutation({
+  const { mutate: sendMsg, isPending: isSendingMsg } = useMutation({
     mutationFn: (userData) =>
       axiosInstance.post(`/chat/${conversationId}`, userData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["getSingleConversation"] });
-      
+
       setCreateMessage("");
-      
+
       animateScroll.scrollToBottom(options); // scroll to bottom
-    
+
       // toast.success("Message sent successfully");
-     
     },
     onError: () => {
       // toast.error(err.response.data.message || "Something went wrong");
@@ -105,7 +102,6 @@ const Chat = () => {
         </div>
       ) : (
         <div className="mb-40 mt-24 px-10">
-         
           {/* <div>{getSingleConversation?.data[0]?.chats[0]?.message}</div> */}
           {getSingleConversation?.data[0]?.chats.length ? (
             getSingleConversation?.data[0]?.chats
@@ -134,8 +130,7 @@ const Chat = () => {
                       </div>
                       <div className="chat-header text-md font-semibold mb-2">
                         {chat?.sender[0]?.fullName}
-                    
-                        
+
                         <time className="text-xs opacity-50 ml-4">
                           {formattedDate}
                         </time>
@@ -143,7 +138,6 @@ const Chat = () => {
                       <div className="chat-bubble bg-base-200 text-black ">
                         {chat?.message}
                       </div>
-                     
                     </div>
                   </div>
                 );
@@ -171,13 +165,12 @@ const Chat = () => {
           className="input input-bordered lg:w-1/2 focus:outline-blue-600 "
           // disabled={isPending}
           required
-          disabled = {isSendingMsg && "disabled"}
+          disabled={isSendingMsg && "disabled"}
         />
         <button type="submit" className="btn btn-primary w-14">
           Send
         </button>
       </form>
-     
     </>
   );
 };

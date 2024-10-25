@@ -14,7 +14,7 @@ const Comments = (data) => {
     useState(false);
   const queryClient = useQueryClient();
   const params = useParams();
-  (params);
+  params;
   const comments = data?.listingDetails?.data[0]?.comments;
   // (comments?.length, "comments");
 
@@ -61,7 +61,7 @@ const Comments = (data) => {
 
   // Delete a Comment
   const handleClickDeleteComment = (id) => {
-    (id, "deleting id");
+    id, "deleting id";
     deleteComment(id);
   };
 
@@ -145,7 +145,10 @@ const Comments = (data) => {
                         {item?.owner?.fullName}
                       </p>
                       <p className="text-sm text-gray-600">
-                        <time dateTime={handleDate(item?.createdAt)} title={handleDate(item?.createdAt)}>
+                        <time
+                          dateTime={handleDate(item?.createdAt)}
+                          title={handleDate(item?.createdAt)}
+                        >
                           {handleDate(item?.createdAt)}
                         </time>
                       </p>
@@ -204,7 +207,10 @@ const Comments = (data) => {
           >
             <div className="modal-box  max-w-full ">
               <div className="modal-action sticky top-0 ">
-                <a href="#" className="btn ptn-primary bg-blue-600 text-white mr-2 hover:bg-white hover:text-blue-600 hover:border-blue-600">
+                <a
+                  href="#"
+                  className="btn ptn-primary bg-blue-600 text-white mr-2 hover:bg-white hover:text-blue-600 hover:border-blue-600"
+                >
                   Close
                 </a>
               </div>
@@ -226,7 +232,10 @@ const Comments = (data) => {
                           {item?.owner?.fullName}
                         </p>
                         <p className="text-sm text-gray-600 ">
-                          <time dateTime={handleDate(item?.createdAt)} title={handleDate(item?.createdAt)}>
+                          <time
+                            dateTime={handleDate(item?.createdAt)}
+                            title={handleDate(item?.createdAt)}
+                          >
                             {handleDate(item?.createdAt)}
                           </time>
                         </p>

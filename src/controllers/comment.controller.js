@@ -43,7 +43,7 @@ const addComment = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[errorMessages.length - 1]);
     } else {
-      ("Other error:", error.message);
+      "Other error:", error.message;
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -107,7 +107,7 @@ const getComments = asyncHandler(async (req, res) => {
       );
       throw new ApiError(400, errorMessages[0]);
     } else {
-      ("Other error:", error.message);
+      "Other error:", error.message;
       throw new ApiError(error.statusCode, error.message);
     }
   }
@@ -134,7 +134,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     }
     // Use deleteOne() to delete the comment
     const result = await Comment.deleteOne({ _id: commentId });
-    (result);
+    result;
     if (result.deletedCount === 0) {
       throw new ApiError(500, "Failed to delete comment");
     }

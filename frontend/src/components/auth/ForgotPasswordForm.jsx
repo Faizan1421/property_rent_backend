@@ -31,7 +31,10 @@ const ForgotPasswordForm = () => {
   return (
     <>
       {emailSent ? (
-        <h1 className="text-1xl font-bold flex justify-center items-center text-3x"> Email Sent Successfully</h1>
+        <h1 className="text-1xl font-bold flex justify-center items-center text-3x">
+          {" "}
+          Email Sent Successfully
+        </h1>
       ) : (
         <>
           {" "}

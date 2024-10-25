@@ -79,7 +79,6 @@ const ListingDetailsBelowSectionTwo = (data) => {
               className={`${listingDetails?.isLiked ? "text-red-600" : "text-base-400"} cursor-pointer hover:`}
             />
             <h1 className="text-gray-600 text-xs font-semibold">
-             
               {listingDetails?.likesCount}
             </h1>
           </div>

@@ -6,35 +6,32 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 
 const ListingDetailsSection = (data) => {
-
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-
 
   const navigate = useNavigate();
 
-	const { mutate: createConversation } = useMutation({
-		mutationFn: (userData) => axiosInstance.post("/conversations", userData),
-		onSuccess: (res) => {
+  const { mutate: createConversation } = useMutation({
+    mutationFn: (userData) => axiosInstance.post("/conversations", userData),
+    onSuccess: (res) => {
       // (res?.data?.data?._id);
       navigate(`/messenger/${res?.data?.data?._id}`);
-		},
-		onError: (err) => {
-			toast.error(err.response.data.message || "Something went wrong");
-		},
-	});
+    },
+    onError: (err) => {
+      toast.error(err.response.data.message || "Something went wrong");
+    },
+  });
 
   const listingDetails = data?.listingDetails?.data[0];
 
   const handleClick = () => {
-    if(authUser){
-     createConversation({
-       receiverId: listingDetails?.owner?._id
-     })
-    } else{
-     navigate("/messenger")
+    if (authUser) {
+      createConversation({
+        receiverId: listingDetails?.owner?._id,
+      });
+    } else {
+      navigate("/messenger");
     }
-     
-   }
+  };
 
   const bsonDate = listingDetails?.owner?.createdAt;
   const date = moment(bsonDate).toDate();
@@ -57,10 +54,11 @@ const ListingDetailsSection = (data) => {
           <h2 className="text-sm font-bold mt-2 flex items-center">
             See Profile
             <CircleArrowRight
-            onClick={()=>{
-              navigate(`/profile/${listingDetails?.owner?.username}`)
-            }}
-            className="ml-2 hover:text-blue-600 hover:cursor-pointer" />
+              onClick={() => {
+                navigate(`/profile/${listingDetails?.owner?.username}`);
+              }}
+              className="ml-2 hover:text-blue-600 hover:cursor-pointer"
+            />
           </h2>
         </div>
       </div>
@@ -68,7 +66,6 @@ const ListingDetailsSection = (data) => {
         <h1
           className="btn ptn-primary bg-blue-600 text-white mr-2 hover:bg-white hover:text-blue-600 hover:border-blue-600  xl:w-72  "
           onClick={handleClick}
-          
         >
           Message
         </h1>

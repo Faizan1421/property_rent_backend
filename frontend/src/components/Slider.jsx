@@ -39,15 +39,21 @@ const Slider = (data) => {
               }
             />
             {/* Daisy Ui Model is implemented below for full image view */}
-            <dialog id={`index-${index}`} className="modal bg-black bg-opacity-50 backdrop-blur-lg">
+            <dialog
+              id={`index-${index}`}
+              className="modal bg-black bg-opacity-50 backdrop-blur-lg"
+            >
               <div className="modal-box p-0">
                 <form method="dialog">
                   <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 text-blue-600">
-                  <CircleX/>
+                    <CircleX />
                   </button>
                 </form>
-                <img src={slideContent?.url} alt="" className="w-[100%] h-[100%] object-contain" />
-                
+                <img
+                  src={slideContent?.url}
+                  alt=""
+                  className="w-[100%] h-[100%] object-contain"
+                />
               </div>
             </dialog>
           </SwiperSlide>

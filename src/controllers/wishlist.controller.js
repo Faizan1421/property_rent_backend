@@ -68,7 +68,7 @@ const deleteFromWishlist = asyncHandler(async (req, res) => {
       listing: listingId,
       owner: userId,
     });
-    (wishlist);
+    wishlist;
     if (!wishlist) {
       throw new ApiError(404, "Add First to delete from wishlist");
     }
@@ -100,10 +100,9 @@ const getAllWishlists = asyncHandler(async (req, res) => {
         select: " title description categories price images location ",
         populate: {
           path: "categories",
-          select: "name" // or any other fields you want to fetch from the categories collection
-        }
-      }
-
+          select: "name", // or any other fields you want to fetch from the categories collection
+        },
+      },
     ]);
   });
 

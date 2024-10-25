@@ -18,7 +18,7 @@ const Navbar = () => {
   // 	queryFn: async () => axiosInstance.get("/connections/requests"),
   // 	enabled: !!authUser,
   // });
-   const navigate= useNavigate();
+  const navigate = useNavigate();
   const { mutate: logout } = useMutation({
     mutationFn: () => axiosInstance.post("/users/logout"),
     onSuccess: () => {
@@ -45,9 +45,15 @@ const Navbar = () => {
           </div>
           <div className="flex items-center gap-2 md:gap-6">
             {authUser ? (
-               
               <div className="flex justify-end gap-3 items-center">
-                { authUser?.data?.role == "user" && <Link to="/admin/dashboard" className="btn ptn-primary bg-blue-600 text-white mr-2 hover:bg-white hover:text-blue-600 hover:border-blue-600">Become A Seller</Link>}
+                {authUser?.data?.role == "user" && (
+                  <Link
+                    to="/admin/dashboard"
+                    className="btn ptn-primary bg-blue-600 text-white mr-2 hover:bg-white hover:text-blue-600 hover:border-blue-600"
+                  >
+                    Become A Seller
+                  </Link>
+                )}
                 <button
                   className="flex items-center space-x-1 text-sm text-gray-600 hover:text-blue-600"
                   onClick={() => logout()}
@@ -55,7 +61,7 @@ const Navbar = () => {
                   <LogOut size={20} />
                   <span className="hidden font-semibold md:inline">Logout</span>
                 </button>
-              
+
                 <div className="dropdown dropdown-bottom dropdown-end">
                   <div
                     tabIndex={0}
@@ -68,10 +74,16 @@ const Navbar = () => {
                     tabIndex={0}
                     className="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow mt-4"
                   >
-                    <li className="hover:bg-blue-600 rounded-lg hover:text-white" onClick={() => navigate("/wishlist")}>
+                    <li
+                      className="hover:bg-blue-600 rounded-lg hover:text-white"
+                      onClick={() => navigate("/wishlist")}
+                    >
                       <a>Wishlist</a>
                     </li>
-                    <li className="hover:bg-blue-600 rounded-lg hover:text-white" onClick={() => navigate("/messenger")}>
+                    <li
+                      className="hover:bg-blue-600 rounded-lg hover:text-white"
+                      onClick={() => navigate("/messenger")}
+                    >
                       <a>Messages</a>
                     </li>
                     <li>
@@ -84,7 +96,6 @@ const Navbar = () => {
                     </li>
                   </ul>
                 </div>
-               
               </div>
             ) : (
               <>

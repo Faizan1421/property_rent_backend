@@ -9,20 +9,17 @@ import { useEffect, useState } from "react";
 import { Loader } from "lucide-react";
 import ListingCard from "./ListingCard";
 
-
-
 const Listings = () => {
-    const [categoryCheck, setCategoryCheck] = useState(false);
-    
-    const queryClient = useQueryClient();
-    
+  const [categoryCheck, setCategoryCheck] = useState(false);
+
+  const queryClient = useQueryClient();
+
   const { data: category } = useQuery({
     queryKey: ["selectedCategory"],
     initialData: {
       name: "all",
     },
   });
-
 
   //   we are checking if category is changed then we will set categoryCheck to true for refetching listing data from server again.
   useEffect(() => {
@@ -43,7 +40,7 @@ const Listings = () => {
     const { data } = await axiosInstance.get(
       `listings/c/${category.name}?page=${pageParam}&limit=12`
     );
-    (data);
+    data;
     return data.data;
   };
 
@@ -75,7 +72,7 @@ const Listings = () => {
   //////////////////////////////////////////
 
   if (isLoading) return <div className="text-center w-full">Loading...</div>;
-  (queryData);
+  queryData;
   if (!queryData && !isLoading)
     return <div className="text-center w-full">No data</div>;
 
@@ -95,7 +92,7 @@ const Listings = () => {
             className="flex flex-wrap justify-center items-center px-10"
           >
             {page.docs.map((item, index) => (
-             <ListingCard key={index} item={item} />
+              <ListingCard key={index} item={item} />
             ))}
           </div>
         ))}
